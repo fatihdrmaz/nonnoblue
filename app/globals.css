@@ -1,26 +1,248 @@
 @import "tailwindcss";
 
+/* Fonts are loaded via next/font/google in app/layout.tsx */
+
+/* ─── Design Tokens ─────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors */
+  --ink: #0b2545;
+  --muted: #6b7f9e;
+  --line: rgba(11,42,80,.12);
+  --line-2: rgba(11,42,80,.07);
+  --deep: #13315c;
+  --deep-2: #0a1f3d;
+  --teal: #1d6a96;
+  --teal-2: #2e8bb8;
+  --cyan: #5aaed1;
+  --sky: #8dc7dc;
+  --mist: #d6e6ef;
+  --foam: #eef6fa;
+  --sand: #f1f6f9;
+  --sand-2: #e2ecf2;
+  --warm: #d98b3f;
+  --gold: #b8860b;
+  --bg: #f7fbfc;
+  --card: #ffffff;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(11, 42, 80, 0.06), 0 1px 3px rgba(11, 42, 80, 0.04);
+  --shadow: 0 4px 12px rgba(11, 42, 80, 0.09), 0 2px 4px rgba(11, 42, 80, 0.05);
+  --shadow-lg: 0 24px 48px -12px rgba(11, 42, 80, 0.24), 0 12px 24px -12px rgba(11, 42, 80, 0.14);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ─── Dark Mode ──────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --ink: #e6f4f7;
+  --bg: #071a21;
+  --card: #0d2b35;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Tailwind v4 Theme ──────────────────────────────────────────────── */
+@theme {
+  /* Colors */
+  --color-ink: var(--ink);
+  --color-deep: var(--deep);
+  --color-deep-2: var(--deep-2);
+  --color-teal: var(--teal);
+  --color-teal-2: var(--teal-2);
+  --color-cyan: var(--cyan);
+  --color-sky: var(--sky);
+  --color-mist: var(--mist);
+  --color-foam: var(--foam);
+  --color-sand: var(--sand);
+  --color-sand-2: var(--sand-2);
+  --color-warm: var(--warm);
+  --color-gold: var(--gold);
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+
+  /* Typography — variable injected by next/font in layout.tsx */
+  --font-sans: var(--font-inter, "Helvetica Neue", "Helvetica", "Arial", sans-serif);
+  --font-serif: var(--font-playfair, "Playfair Display", "Georgia", serif);
+
+  /* Border Radius */
+  --radius-sm: var(--radius-sm);
+  --radius-DEFAULT: var(--radius);
+  --radius-lg: var(--radius-lg);
+
+  /* Shadows */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-DEFAULT: var(--shadow);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Spacing */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-14: 56px;
+  --spacing-20: 80px;
+  --spacing-30: 120px;
+}
+
+/* ─── Base Styles ────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--teal);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--teal-2);
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  background: none;
+  transition: opacity 0.2s ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ─── Container ──────────────────────────────────────────────────────── */
+.container {
+  max-width: 80rem; /* 1280px / 7xl */
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-inline: 2rem;
+  }
+}
+
+/* ===== Shared classes ===== */
+.eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--teal); }
+.display { font-family: var(--f-serif, "Playfair Display", serif); font-weight: 700; letter-spacing: -0.02em; }
+.badge-new { background: var(--teal); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ===== Boat card ===== */
+.nb-boat-card { background: var(--card); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: all .3s ease; position: relative; border: 1px solid var(--line); display: block; text-decoration: none; color: inherit; }
+.nb-boat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.nb-boat-img { aspect-ratio: 4/3; overflow: hidden; position: relative; background: var(--sand); }
+.nb-boat-badge { position: absolute; top: 14px; right: 50px; background: rgba(255,255,255,.95); color: var(--ink); font-weight: 700; font-size: 11px; padding: 6px 10px; border-radius: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+.nb-boat-heart { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.92); display: flex; align-items: center; justify-content: center; color: var(--ink); border: 0; cursor: pointer; transition: all .2s; }
+.nb-boat-body { padding: 20px 22px 22px; }
+.nb-boat-meta { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 6px; }
+.nb-boat-specs { display: flex; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 16px; font-size: 13px; color: var(--muted); }
+.nb-boat-foot { display: flex; align-items: flex-end; justify-content: space-between; }
+.nb-fleet-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+@media (max-width: 900px) { .nb-fleet-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .nb-fleet-grid { grid-template-columns: 1fr; } }
+
+/* ===== Section styles ===== */
+.nb-section { padding: 120px 0; }
+.nb-section-tight { padding: 80px 0; }
+.nb-section-ink { background: var(--ink); color: var(--foam); }
+.nb-section-sand { background: var(--sand); }
+.nb-section-foam { background: var(--foam); }
+
+/* ===== Page head ===== */
+.nb-page-head { background: var(--deep); color: #fff; padding: 140px 0 60px; }
+.nb-page-head h1 { font-family: var(--f-serif, "Playfair Display", serif); font-size: clamp(36px, 5vw, 64px); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 12px; }
+.breadcrumb { font-size: 13px; opacity: .7; margin-bottom: 12px; display: flex; gap: 6px; }
+.breadcrumb a { cursor: pointer; }
+.breadcrumb a:hover { opacity: .8; }
+
+/* ===== Buttons ===== */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-size: 14px; font-weight: 600; border: 0; cursor: pointer; transition: all .2s; text-decoration: none; }
+.btn-primary { background: var(--coral, #d97757); color: #fff; }
+.btn-primary:hover { background: var(--coral-dark, #b85a3a); }
+.btn-ghost { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
+.btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
+.btn-white { background: #fff; color: var(--ink); }
+.btn-white:hover { background: var(--foam); }
+.btn-lg { padding: 16px 28px; font-size: 15px; border-radius: 12px; }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+
+/* ===== Form inputs ===== */
+.input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); font: inherit; font-size: 14px; background: var(--card); color: var(--ink); transition: border-color .15s; }
+.input:focus { outline: none; border-color: var(--teal); }
+.label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); display: block; margin-bottom: 6px; }
+
+/* ===== Fleet layout ===== */
+.nb-fleet-layout { display: grid; grid-template-columns: 240px 1fr; gap: 48px; align-items: start; }
+.nb-filter-wrapper { display: block; }
+.nb-filter-mobile-toggle { display: none; }
+.nb-filter { position: sticky; top: 96px; }
+.nb-filter-section { margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+.nb-filter-section h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px; }
+.nb-filter-chip { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1.5px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; transition: all .15s; margin: 4px 4px 4px 0; }
+.nb-filter-chip[data-active="true"] { background: var(--teal); border-color: var(--teal); color: #fff; }
+.nb-filter-range { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 8px; }
+@media (max-width: 900px) {
+  .nb-fleet-layout { grid-template-columns: 1fr; }
+  .nb-filter-mobile-toggle { display: block; }
+  .nb-filter-wrapper { display: none; }
+  .nb-filter-wrapper.nb-filter-open { display: block; margin-bottom: 32px; }
+  .nb-filter { position: static; }
+}
+
+/* ===== Boat detail ===== */
+.nb-boat-detail-grid { display: grid; grid-template-columns: 1fr 380px; gap: 60px; align-items: start; padding: 60px 0 120px; }
+@media (max-width: 1100px) { .nb-boat-detail-grid { grid-template-columns: 1fr; } }
+.nb-spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; margin-bottom: 40px; }
+.nb-spec-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line-2, rgba(11,42,80,.07)); font-size: 14px; }
+.nb-spec-row span:first-child { color: var(--muted); }
+.nb-spec-row span:last-child { font-weight: 600; }
+.nb-booking-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px; position: sticky; top: 100px; }
+.nb-price-display .price { font-size: 36px; font-weight: 800; color: var(--deep); letter-spacing: -0.03em; }
+.nb-price-display .price-unit { font-size: 14px; color: var(--muted); margin-left: 4px; }
+.nb-booking-features { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; font-size: 13px; color: var(--muted); }
+.nb-booking-features div { display: flex; align-items: center; gap: 8px; }
+.nb-boat-thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 16px 0; }
+.nb-boat-hero { position: relative; height: 500px; overflow: hidden; }
+.nb-boat-hero-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(to top, rgba(10,31,61,.8) 0%, transparent 80%); color: #fff; }
