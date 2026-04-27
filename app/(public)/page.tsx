@@ -273,15 +273,37 @@ function RoutesSection() {
 
 // ─── CHARTER TYPES ────────────────────────────────────────────────────────────
 
-const CHARTER_ICON: Record<string, React.ReactNode> = {
-  anchor: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v14M5 13a7 7 0 0 0 14 0M8 15H3M21 15h-5"/></svg>,
-  compass: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88"/></svg>,
-  crown: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 5 5-8 5 8 4-5-2 12H5L3 8z"/><path d="M5 20h14"/></svg>,
-};
+const CHARTER_CARDS = [
+  {
+    num: '01',
+    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v14M5 13a7 7 0 0 0 14 0M8 15H3M21 15h-5"/></svg>,
+    tag: 'Özgürlük · Macera',
+    name: 'Bareboat Charter',
+    desc: 'Geçerli kaptanlık belgenizle tekneyi kendiniz kullanın. Rotanızı siz belirleyin, koyları siz keşfedin.',
+    price: '€3.500\'den / hafta',
+    featured: false,
+  },
+  {
+    num: '02',
+    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88"/></svg>,
+    tag: 'En Çok Tercih Edilen',
+    name: 'Skipperli Charter',
+    desc: 'Deneyimli kaptanımız sizi en güzel koylarla tanıştırsın. Yerel bilgimizle gizli koylara uzanın.',
+    price: '€4.500\'den / hafta',
+    featured: true,
+  },
+  {
+    num: '03',
+    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 5 5-8 5 8 4-5-2 12H5L3 8z"/><path d="M5 20h14"/></svg>,
+    tag: 'VIP Deneyim',
+    name: 'Tam Hizmet Charter',
+    desc: 'Kaptan, hostes ve isteğe bağlı şefle tam otel konforunda bir deniz tatili. Her detay bizden.',
+    price: '€6.500\'den / hafta',
+    featured: false,
+  },
+];
 
 function CharterTypesSection() {
-  const types = NB_DATA.charterTypes ?? [];
-
   return (
     <section className="nb-section-tight nb-charter-section">
       <div className="container">
@@ -291,11 +313,11 @@ function CharterTypesSection() {
           align="center"
         />
         <div className="nb-charter-grid">
-          {types.map((c: any, i: number) => (
-            <div key={c.id} className="nb-charter-card" data-featured={i === 1 ? 'true' : 'false'}>
-              <div className="nb-charter-num">0{i + 1}</div>
-              <div className="nb-charter-icon-wrap">{CHARTER_ICON[c.icon] ?? null}</div>
-              <div className="nb-charter-tag">{c.tagline}</div>
+          {CHARTER_CARDS.map((c) => (
+            <div key={c.num} className="nb-charter-card" data-featured={c.featured ? 'true' : 'false'}>
+              <div className="nb-charter-num">{c.num}</div>
+              <div className="nb-charter-icon-wrap">{c.icon}</div>
+              <div className="nb-charter-tag">{c.tag}</div>
               <h3 className="display">{c.name}</h3>
               <p>{c.desc}</p>
               <div className="nb-charter-foot">
@@ -317,11 +339,16 @@ function CharterTypesSection() {
 
 // ─── TESTIMONIALS ─────────────────────────────────────────────────────────────
 
-function TestimonialsSection() {
-  const testimonials = NB_DATA.testimonials ?? [];
+const TESTIMONIALS = [
+  { name: 'Elif & Can', trip: 'Ivan Nonno · 7 gün · Temmuz 2025', text: 'Her şey mükemmeldi. Tekne 2024 model, yepyeni; klima ve jeneratör sayesinde sıcak temmuzda bile kokpitte çay içtik. Fatih Bey gece 23:00\'te mesaj attığımızda bile anında döndü.', avatar: 'https://i.pravatar.cc/120?u=elifcan' },
+  { name: 'Marco Rossi', trip: 'Carmelina · 10 gün · Eylül 2025', text: 'Professional crew, beautiful boat. The Bose system and the karaoke were a bonus — evenings in Gemiler bay will stay with us. Returning next summer, for sure.', avatar: 'https://i.pravatar.cc/120?u=marco2' },
+  { name: 'Aylin Yılmaz', trip: 'Rena · 7 gün · Haziran 2025', text: 'Rena için fiyat-performans olarak piyasadaki en iyi seçenek. 4+2 kabin çift aileye bol bol yetti, watermaker da büyük artı. Teslim öncesi brifing çok detaylıydı.', avatar: 'https://i.pravatar.cc/120?u=aylin' },
+  { name: 'Thomas Weber', trip: 'Ayza 1 · 14 gün · Ağustos 2025', text: 'Ein fantastischer Urlaub. Der Lagoon 42 ist perfekt für 8 Erwachsene — stabil, leise, gut belüftet. Die Bucht von Göcek ist ein Paradies.', avatar: 'https://i.pravatar.cc/120?u=thomas' },
+];
 
+function TestimonialsSection() {
   return (
-    <section className="nb-section">
+    <section className="nb-section nb-section-sand">
       <div className="container">
         <SectionTitle
           eyebrow="Referanslar"
@@ -329,20 +356,18 @@ function TestimonialsSection() {
           align="center"
         />
         <div className="nb-testimonials">
-          {testimonials.map((t: any, i: number) => (
+          {TESTIMONIALS.map((t, i) => (
             <div key={i} className="nb-test">
               <div className="nb-test-stars">
                 {[...Array(5)].map((_, j) => (
-                  <svg key={j} width="16" height="16" viewBox="0 0 24 24" fill="var(--warm)" stroke="none">
+                  <svg key={j} width="16" height="16" viewBox="0 0 24 24">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                   </svg>
                 ))}
               </div>
               <p>&ldquo;{t.text}&rdquo;</p>
               <div className="nb-test-foot">
-                {t.avatar && (
-                  <Image src={t.avatar} alt={t.name} width={44} height={44} style={{ borderRadius: '50%', objectFit: 'cover' }} />
-                )}
+                <img src={t.avatar} alt={t.name} width={44} height={44} />
                 <div>
                   <strong>{t.name}</strong>
                   <span>{t.trip}</span>
