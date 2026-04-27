@@ -100,25 +100,23 @@ export default function IletisimPage() {
 
   return (
     <>
-      {/* ── Hero ── */}
-      <section style={{ background: 'var(--deep)', color: '#fff', padding: '140px 0 60px' }}>
+      {/* Page Head */}
+      <div className="nb-page-head">
         <div className="container">
-          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: 'var(--teal)', marginBottom: 12 }}>
-            İletişim
-          </p>
-          <h1 style={{ fontFamily: 'var(--font-serif, "Playfair Display", serif)', fontSize: 'clamp(36px, 5vw, 64px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 16 }}>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>İletişim</div>
+          <h1 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(36px,5vw,64px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 20, lineHeight: 1.15 }}>
             Bizimle İletişime Geçin
           </h1>
-          <p style={{ fontSize: 18, color: 'var(--sky)', maxWidth: 520 }}>
-            Rezervasyon, fiyat talebi veya aklınızdaki her soruyu bizimle paylaşın. En kısa sürede size dönüş yapacağız.
+          <p style={{ fontSize: 18, opacity: 0.8, maxWidth: 520, lineHeight: 1.7 }}>
+            Rezervasyon, fiyat talebi veya aklınızdaki her soruyu bizimle paylaşın. En kısa sürede dönüş yapacağız.
           </p>
         </div>
-      </section>
+      </div>
 
-      {/* ── Main content ── */}
-      <section style={{ background: 'var(--bg)', padding: '80px 0 120px' }}>
+      {/* Main content */}
+      <section className="nb-section">
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 380px', gap: 48, alignItems: 'start' }}>
+          <div className="nb-contact-grid">
 
             {/* ── Contact Form ── */}
             <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '40px 36px' }}>

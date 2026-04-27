@@ -39,20 +39,17 @@ function HeroSection() {
     <section className="nb-hero">
       <div className="nb-hero-bg">
         {HERO_SLIDES.map((s, i) => (
-          <Image
+          <div
             key={i}
-            src={s.img}
-            alt=""
-            fill
-            priority={i === 0}
             style={{
-              objectFit: 'cover',
               position: 'absolute',
               inset: 0,
+              backgroundImage: `url(${s.img})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
               opacity: i === slide ? 1 : 0,
               transition: 'opacity 1.2s ease',
             }}
-            sizes="100vw"
           />
         ))}
       </div>
