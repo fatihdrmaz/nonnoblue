@@ -10,13 +10,13 @@ import { SectionTitle } from '@/components/SectionTitle';
 // Hero image slides — use Unsplash URLs from IMG constants in mock
 const HERO_SLIDES = [
   {
-    img: 'https://images.unsplash.com/photo-1599640842225-85d111c60e6b?w=2400&q=80&auto=format&fit=crop',
+    img: '/images/hero/lagoon42-bay.jpg',
     eyebrow: 'Göcek · Fethiye · D-Marin',
     title: 'Lagoon 42\nile Göcek\'in\nmavi sırrı',
     sub: '2024 model 4+2 kabinli katamaranlarımızla, 12 Adalar ve Ölüdeniz koylarında unutulmaz bir hafta.',
   },
   {
-    img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=2400&q=80&auto=format&fit=crop',
+    img: '/images/hero/aerial-catamaran.jpg',
     eyebrow: '2026 Sezonu Açıldı',
     title: 'Koy koy\nTürk Rivierası',
     sub: 'Tersane Adası, Bedri Rahmi, Sarsala, Gemiler ve Ölüdeniz — bir haftada beş hikaye.',

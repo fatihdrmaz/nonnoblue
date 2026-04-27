@@ -59,7 +59,7 @@ export function BoatCard({ boat, className }: BoatCardProps) {
               itibaren
             </div>
             <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--deep)', letterSpacing: '-0.02em' }}>
-              €{boat.priceFrom.toLocaleString()}
+              €{boat.priceFrom.toLocaleString('tr-TR')}
               <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}> / hafta</span>
             </div>
           </div>
