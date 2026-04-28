@@ -1,6 +1,7 @@
 'use client';
 
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 
 const CHARTER_CARDS = [
   {
@@ -103,6 +104,7 @@ const EXTRA_SERVICES = [
 ];
 
 export default function HizmetlerPage() {
+  const t = useTranslations('services');
   return (
     <>
       {/* Page Head */}
@@ -110,11 +112,10 @@ export default function HizmetlerPage() {
         <div className="container">
           <div className="eyebrow" style={{ marginBottom: 16 }}>Kiralama Tipleri</div>
           <h1 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(36px,5vw,64px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 20, maxWidth: 720, lineHeight: 1.15 }}>
-            Her İhtiyaca Özel<br />Charter Seçenekleri
+            {t('title')}
           </h1>
           <p style={{ fontSize: 18, opacity: 0.8, maxWidth: 560, lineHeight: 1.7 }}>
-            Bareboat&apos;tan tam hizmetli chartere, her aile, her grup, her bütçeye
-            uygun tekne tatili deneyimleri.
+            {t('subtitle')}
           </p>
         </div>
       </div>

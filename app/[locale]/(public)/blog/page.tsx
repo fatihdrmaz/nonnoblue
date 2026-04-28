@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { BLOG_POSTS } from '@/data/mock';
 
@@ -31,6 +32,8 @@ function normalizeMockPost(p: typeof BLOG_POSTS[0]): BlogPost {
 }
 
 export default function BlogPage() {
+  const t = useTranslations('blog');
+  const tc = useTranslations('common');
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,12 +59,12 @@ export default function BlogPage() {
       {/* Page Head */}
       <div className="nb-page-head">
         <div className="container">
-          <div className="eyebrow" style={{ marginBottom: 16 }}>Blog</div>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>{t('title')}</div>
           <h1 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(36px,5vw,64px)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.15, marginBottom: 20 }}>
-            Günlük
+            {t('title')}
           </h1>
           <p style={{ fontSize: 18, lineHeight: 1.65, opacity: 0.8, maxWidth: 560 }}>
-            Seyahat rehberleri, rota önerileri ve NonnoBlue mutfağından haberler.
+            {t('subtitle')}
           </p>
         </div>
       </div>
@@ -123,7 +126,7 @@ function BlogCard({ post }: { post: BlogPost }) {
       <div className="nb-blog-meta">
         <span>{post.published_at}</span>
         <span>·</span>
-        <span>{post.read_time} okuma</span>
+        <span>{post.read_time}</span>
       </div>
       <h3>{post.title}</h3>
       <p>{post.excerpt}</p>

@@ -1,4 +1,8 @@
+'use client';
+import { useTranslations } from 'next-intl';
+
 export default function KvkkPage() {
+  const t = useTranslations('kvkk');
   return (
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
       <div
@@ -19,7 +23,7 @@ export default function KvkkPage() {
             margin: 0,
           }}
         >
-          KVKK Aydınlatma Metni
+          {t('title')}
         </h1>
       </div>
 

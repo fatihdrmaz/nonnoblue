@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 
 const BRAND = {
@@ -91,6 +91,7 @@ interface FormState {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function IletisimPage() {
+  const t = useTranslations('contact');
   const [form, setForm] = useState<FormState>({
     adSoyad: '',
     eposta: '',
@@ -119,7 +120,7 @@ export default function IletisimPage() {
       message: form.mesaj,
     });
     if (error) {
-      setSubmitError('Bir hata oluştu, lütfen tekrar deneyin.');
+      setSubmitError(t('error'));
       setSubmitting(false);
       return;
     }
@@ -132,12 +133,12 @@ export default function IletisimPage() {
       {/* Page Head */}
       <div className="nb-page-head">
         <div className="container">
-          <div className="eyebrow" style={{ marginBottom: 16 }}>İletişim</div>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>{t('page_eyebrow')}</div>
           <h1 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(36px,5vw,64px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 20, lineHeight: 1.15 }}>
-            Bizimle İletişime Geçin
+            {t('page_title')}
           </h1>
           <p style={{ fontSize: 18, opacity: 0.8, maxWidth: 520, lineHeight: 1.7 }}>
-            Rezervasyon, fiyat talebi veya aklınızdaki her soruyu bizimle paylaşın. En kısa sürede dönüş yapacağız.
+            {t('page_sub')}
           </p>
         </div>
       </div>
@@ -149,9 +150,9 @@ export default function IletisimPage() {
 
             {/* ── Contact Form ── */}
             <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '40px 36px' }}>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>Mesaj Gönderin</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>{t('form_title')}</h2>
               <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 32 }}>
-                Tüm alanları doldurun, ekibimiz en geç 24 saat içinde size ulaşsın.
+                {t('form_sub')}
               </p>
 
               {submitted ? (
@@ -166,15 +167,15 @@ export default function IletisimPage() {
                 }}>
                   <span style={{ fontSize: 24, lineHeight: 1 }}>✓</span>
                   <div>
-                    <p style={{ fontWeight: 700, color: 'var(--teal)', marginBottom: 4 }}>Mesajınız alındı!</p>
+                    <p style={{ fontWeight: 700, color: 'var(--teal)', marginBottom: 4 }}>{t('success_title')}</p>
                     <p style={{ fontSize: 14, color: 'var(--ink)' }}>
-                      Mesajınız alındı, en kısa sürede dönüş yapacağız.
+                      {t('success_body')}
                     </p>
                     <button
                       onClick={() => { setSubmitted(false); setForm({ adSoyad: '', eposta: '', telefon: '', konu: '', mesaj: '' }); }}
                       style={{ marginTop: 16, fontSize: 13, color: 'var(--teal)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                     >
-                      Yeni mesaj gönder →
+                      {t('send_new')}
                     </button>
                   </div>
                 </div>
@@ -182,7 +183,7 @@ export default function IletisimPage() {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {/* Ad Soyad */}
                   <div>
-                    <label htmlFor="adSoyad" className="label">Ad Soyad</label>
+                    <label htmlFor="adSoyad" className="label">{t('full_name')}</label>
                     <input
                       id="adSoyad"
                       name="adSoyad"
@@ -198,7 +199,7 @@ export default function IletisimPage() {
                   {/* E-posta & Telefon */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div>
-                      <label htmlFor="eposta" className="label">E-posta</label>
+                      <label htmlFor="eposta" className="label">{t('email')}</label>
                       <input
                         id="eposta"
                         name="eposta"
@@ -211,7 +212,7 @@ export default function IletisimPage() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="telefon" className="label">Telefon</label>
+                      <label htmlFor="telefon" className="label">{t('phone')}</label>
                       <input
                         id="telefon"
                         name="telefon"
@@ -226,7 +227,7 @@ export default function IletisimPage() {
 
                   {/* Konu */}
                   <div>
-                    <label htmlFor="konu" className="label">Konu</label>
+                    <label htmlFor="konu" className="label">{t('subject')}</label>
                     <select
                       id="konu"
                       name="konu"
@@ -236,17 +237,17 @@ export default function IletisimPage() {
                       required
                       style={{ appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7f9e' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: 40 }}
                     >
-                      <option value="">Konu seçin…</option>
-                      <option value="rezervasyon">Rezervasyon</option>
-                      <option value="fiyat">Fiyat Talebi</option>
-                      <option value="genel">Genel Soru</option>
-                      <option value="diger">Diğer</option>
+                      <option value="">{t('subject_select')}</option>
+                      <option value="rezervasyon">{t('subject_reservation')}</option>
+                      <option value="fiyat">{t('subject_price')}</option>
+                      <option value="genel">{t('subject_general')}</option>
+                      <option value="diger">{t('subject_other')}</option>
                     </select>
                   </div>
 
                   {/* Mesaj */}
                   <div>
-                    <label htmlFor="mesaj" className="label">Mesaj</label>
+                    <label htmlFor="mesaj" className="label">{t('message')}</label>
                     <textarea
                       id="mesaj"
                       name="mesaj"
@@ -281,7 +282,7 @@ export default function IletisimPage() {
                       letterSpacing: '0.02em',
                     }}
                   >
-                    {submitting ? 'Gönderiliyor…' : 'Gönder'}
+                    {submitting ? t('sending') : t('send')}
                   </button>
                 </form>
               )}
@@ -290,14 +291,14 @@ export default function IletisimPage() {
             {/* ── Info Card ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '36px 32px' }}>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', marginBottom: 28 }}>İletişim Bilgileri</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', marginBottom: 28 }}>{t('contact_info')}</h2>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {/* Address */}
                   <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                     <span style={{ color: 'var(--teal)', flexShrink: 0, marginTop: 2 }}><IconMapPin /></span>
                     <div>
-                      <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 4 }}>Adres</p>
+                      <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 4 }}>{t('address')}</p>
                       <p style={{ fontSize: 14, color: 'var(--ink)', lineHeight: 1.5 }}>{BRAND.address}</p>
                     </div>
                   </div>
@@ -306,7 +307,7 @@ export default function IletisimPage() {
                   <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                     <span style={{ color: 'var(--teal)', flexShrink: 0, marginTop: 2 }}><IconPhone /></span>
                     <div>
-                      <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 4 }}>Telefon</p>
+                      <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 4 }}>{t('phone')}</p>
                       <a href={`tel:${BRAND.phone}`} style={{ fontSize: 14, color: 'var(--ink)', textDecoration: 'none', fontWeight: 600 }}>{BRAND.phone}</a>
                     </div>
                   </div>
@@ -315,7 +316,7 @@ export default function IletisimPage() {
                   <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                     <span style={{ color: 'var(--teal)', flexShrink: 0, marginTop: 2 }}><IconMail /></span>
                     <div>
-                      <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 4 }}>E-posta</p>
+                      <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 4 }}>{t('email')}</p>
                       <a href={`mailto:${BRAND.email}`} style={{ fontSize: 14, color: 'var(--teal)', fontWeight: 600, textDecoration: 'none' }}>{BRAND.email}</a>
                     </div>
                   </div>
@@ -345,11 +346,11 @@ export default function IletisimPage() {
                   }}
                 >
                   <IconWhatsApp />
-                  WhatsApp ile Yazın
+                  {t('whatsapp_btn')}
                 </a>
 
                 {/* Social links */}
-                <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 12 }}>Sosyal Medya</p>
+                <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 12 }}>{t('social_media')}</p>
                 <div style={{ display: 'flex', gap: 10 }}>
                   <a
                     href={BRAND.socials.instagram}
@@ -383,19 +384,19 @@ export default function IletisimPage() {
 
               {/* Office hours */}
               <div style={{ background: 'var(--foam)', border: '1px solid var(--mist)', borderRadius: 'var(--radius)', padding: '24px 28px' }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--deep)', marginBottom: 12 }}>Ofis Saatleri</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--deep)', marginBottom: 12 }}>{t('office_hours')}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: 'var(--muted)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Pazartesi – Cuma</span>
+                    <span>{t('weekdays')}</span>
                     <span style={{ fontWeight: 600, color: 'var(--ink)' }}>09:00 – 18:00</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Cumartesi</span>
+                    <span>{t('saturday')}</span>
                     <span style={{ fontWeight: 600, color: 'var(--ink)' }}>10:00 – 16:00</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Pazar</span>
-                    <span style={{ fontWeight: 600, color: 'var(--ink)' }}>Kapalı</span>
+                    <span>{t('sunday')}</span>
+                    <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{t('closed')}</span>
                   </div>
                 </div>
               </div>

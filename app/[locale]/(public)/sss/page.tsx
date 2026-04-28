@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 
 // ─── FAQ Data ─────────────────────────────────────────────────────────────────
 
@@ -121,19 +122,19 @@ function AccordionItem({ q, a }: { q: string; a: string }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SSSPage() {
+  const t = useTranslations('sss');
   return (
     <>
 
       {/* Page Head */}
       <div className="nb-page-head">
         <div className="container" style={{ textAlign: 'center' }}>
-          <div className="eyebrow" style={{ marginBottom: 16 }}>SSS</div>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>FAQ</div>
           <h1 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(36px,5vw,64px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 20, lineHeight: 1.15 }}>
-            Sık Sorulan Sorular
+            {t('title')}
           </h1>
           <p style={{ fontSize: 18, opacity: 0.8, maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>
-            Merak ettiğiniz her şeyi burada bulabilirsiniz. Cevap bulamazsanız
-            doğrudan bize yazın.
+            {t('subtitle')}
           </p>
         </div>
       </div>

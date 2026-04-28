@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { BOATS, ROUTES } from '@/data/mock';
@@ -57,6 +58,7 @@ export default function RezervasyonPage() {
 }
 
 function RezervasyonForm() {
+  const t = useTranslations('reservation');
   const searchParams = useSearchParams();
   const boatParam = searchParams.get('boat') ?? '';
   const startParam = searchParams.get('start') ?? '';
@@ -185,12 +187,12 @@ function RezervasyonForm() {
       <section style={{ background: 'var(--deep)', color: '#fff', padding: '140px 0 60px' }}>
         <div className="container">
           <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: 'var(--teal)', marginBottom: 12 }}>
-            Rezervasyon
+            {t('page_eyebrow')}
           </p>
           <h1 style={{ fontFamily: 'var(--font-serif, "Playfair Display", serif)', fontSize: 'clamp(36px, 5vw, 64px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 16 }}>
-            Tekne Rezervasyonu
+            {t('page_title')}
           </h1>
-          <p style={{ fontSize: 18, color: 'var(--sky)', maxWidth: 520 }}>Size özel fiyat teklifi alın</p>
+          <p style={{ fontSize: 18, color: 'var(--sky)', maxWidth: 520 }}>{t('page_sub')}</p>
         </div>
       </section>
 
@@ -202,25 +204,25 @@ function RezervasyonForm() {
               <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '60px 48px', textAlign: 'center' }}>
                 <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'var(--foam)', border: '2px solid var(--teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', fontSize: 32, color: 'var(--teal)' }}>✓</div>
                 <h2 style={{ fontFamily: 'var(--font-serif, "Playfair Display", serif)', fontSize: 28, fontWeight: 700, color: 'var(--deep)', marginBottom: 16 }}>
-                  Talebiniz Alındı!
+                  {t('success_title')}
                 </h2>
                 <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 8 }}>
-                  Rezervasyon kodunuz: <strong style={{ fontFamily: 'monospace', color: 'var(--ink)' }}>{bookingCode}</strong>
+                  {t('success_code')} <strong style={{ fontFamily: 'monospace', color: 'var(--ink)' }}>{bookingCode}</strong>
                 </p>
                 <p style={{ fontSize: 16, color: 'var(--muted)', maxWidth: 400, margin: '0 auto 36px', lineHeight: 1.6 }}>
-                  En geç 24 saat içinde <strong>{form.eposta}</strong> adresinize dönüş yapacağız.
+                  {t('success_text')}
                 </p>
                 <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--teal)', color: '#fff', borderRadius: 'var(--radius-sm)', padding: '13px 28px', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
-                  Ana Sayfaya Dön
+                  {t('home_btn')}
                 </Link>
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '40px 40px 48px' }}>
                 <h2 style={{ fontFamily: 'var(--font-serif, "Playfair Display", serif)', fontSize: 24, fontWeight: 700, color: 'var(--deep)', marginBottom: 8 }}>
-                  Teklif Talebi Oluşturun
+                  {t('form_title')}
                 </h2>
                 <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 40 }}>
-                  Formu doldurun, uzman ekibimiz size özel bir teklif hazırlasın.
+                  {t('form_sub')}
                 </p>
 
                 {submitError && (
@@ -232,21 +234,21 @@ function RezervasyonForm() {
                 {/* Section 1 */}
                 <p style={sectionTitleStyle}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'var(--teal)', color: '#fff', fontSize: 12, fontWeight: 800 }}>1</span>
-                  Tekne &amp; Rota
+                  {t('section_boat_route')}
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   <div>
-                    <label htmlFor="tekne" style={labelStyle}>Tekne <span style={{ color: '#e53e3e' }}>*</span></label>
+                    <label htmlFor="tekne" style={labelStyle}>{t('boat')} <span style={{ color: '#e53e3e' }}>*</span></label>
                     <select id="tekne" name="tekne" value={form.tekne} onChange={handleChange} style={selectStyle(!!errors.tekne)}>
-                      <option value="">Tekne seçin…</option>
+                      <option value="">{t('select_boat_opt')}</option>
                       {boats.map(b => <option key={b.id} value={b.id}>{b.name} — {b.type}</option>)}
                     </select>
-                    {errors.tekne && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>Lütfen bir tekne seçin.</p>}
+                    {errors.tekne && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>{t('error_boat')}</p>}
                   </div>
 
                   <div>
-                    <label htmlFor="rota" style={labelStyle}>Rota <span style={{ fontSize: 11, fontWeight: 400, textTransform: 'none' }}>(isteğe bağlı)</span></label>
+                    <label htmlFor="rota" style={labelStyle}>{t('route')} <span style={{ fontSize: 11, fontWeight: 400, textTransform: 'none' }}>{t('route_optional')}</span></label>
                     <select id="rota" name="rota" value={form.rota} onChange={handleChange} style={selectStyle(false)}>
                       <option value="">Rota seçin…</option>
                       {routes.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}

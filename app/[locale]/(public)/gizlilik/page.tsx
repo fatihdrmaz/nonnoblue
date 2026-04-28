@@ -1,4 +1,8 @@
+'use client';
+import { useTranslations } from 'next-intl';
+
 export default function GizlilikPage() {
+  const t = useTranslations('privacy');
   return (
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
       <div
@@ -19,7 +23,7 @@ export default function GizlilikPage() {
             margin: 0,
           }}
         >
-          Gizlilik Politikası
+          {t('title')}
         </h1>
       </div>
 

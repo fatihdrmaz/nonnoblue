@@ -1,7 +1,12 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Logo } from './Logo';
 
 export function Footer() {
+  const t = useTranslations('footer');
+
   return (
     <footer className="nb-footer">
       <div className="container nb-footer-grid">
@@ -10,7 +15,7 @@ export function Footer() {
             <Logo invert height={36} />
           </div>
           <p style={{ color: 'rgba(255,255,255,.72)', fontSize: 14, maxWidth: 320, lineHeight: 1.7 }}>
-            Türk Rivierası&apos;nda aile ruhuyla. 2020&apos;den beri Göcek&apos;te özenle kürüsyonlanmış katamaran filosu.
+            {t('tagline')}
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
             <a className="nb-social" href="https://instagram.com/nonnoblue" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -34,25 +39,25 @@ export function Footer() {
         </div>
 
         <div>
-          <div className="nb-footer-h">Keşfet</div>
-          <Link href="/filo">Filo</Link>
-          <Link href="/rotalar">Rotalar</Link>
-          <Link href="/hizmetler">Kiralama Tipleri</Link>
-          <Link href="/hakkimizda">Hakkımızda</Link>
-          <Link href="/blog">Blog</Link>
+          <div className="nb-footer-h">{t('explore')}</div>
+          <Link href="/filo">{t('fleet')}</Link>
+          <Link href="/rotalar">{t('routes')}</Link>
+          <Link href="/hizmetler">{t('charter_types')}</Link>
+          <Link href="/hakkimizda">{t('about')}</Link>
+          <Link href="/blog">{t('faq')}</Link>
         </div>
 
         <div>
-          <div className="nb-footer-h">Yardım</div>
-          <Link href="/sss">SSS</Link>
-          <Link href="/iptal-politikasi">İptal Politikası</Link>
-          <Link href="/sozlesme">Kiralama Sözleşmesi</Link>
-          <Link href="/kvkk">KVKK</Link>
-          <Link href="/gizlilik">Çerez Politikası</Link>
+          <div className="nb-footer-h">{t('help')}</div>
+          <Link href="/sss">{t('faq')}</Link>
+          <Link href="/iptal-politikasi">{t('cancel_policy')}</Link>
+          <Link href="/sozlesme">{t('rental_contract')}</Link>
+          <Link href="/kvkk">{t('kvkk')}</Link>
+          <Link href="/gizlilik">{t('cookie_policy')}</Link>
         </div>
 
         <div>
-          <div className="nb-footer-h">İletişim</div>
+          <div className="nb-footer-h">{t('contact')}</div>
           <a href="tel:+905394403429">+90 539 440 34 29</a>
           <a href="mailto:booking@nonnoblue.com">booking@nonnoblue.com</a>
           <p style={{ color: 'rgba(255,255,255,.72)', fontSize: 13, marginTop: 10, lineHeight: 1.6 }}>
@@ -67,7 +72,7 @@ export function Footer() {
       </div>
 
       <div className="container nb-footer-bot">
-        <span>© 2026 NonnoBlue · Tüm hakları saklıdır.</span>
+        <span>{t('copyright')}</span>
         <span>Göcek · Fethiye · Muğla</span>
       </div>
     </footer>

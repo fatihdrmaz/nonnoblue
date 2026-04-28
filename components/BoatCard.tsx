@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -27,6 +30,7 @@ function toPublicUrl(path: string): string {
 }
 
 export function BoatCard({ boat, className }: BoatCardProps) {
+  const t = useTranslations('fleet');
   const imgSrc = toPublicUrl(boat.img);
   return (
     <Link href={`/filo/${boat.id}`} className={cn("nb-boat-card group block", className)}>
@@ -42,7 +46,7 @@ export function BoatCard({ boat, className }: BoatCardProps) {
         {boat.badge && <span className="nb-boat-badge">{boat.badge}</span>}
         <button
           className="nb-boat-heart"
-          aria-label="Favorilere ekle"
+          aria-label="Add to favorites"
           onClick={e => e.preventDefault()}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -56,22 +60,22 @@ export function BoatCard({ boat, className }: BoatCardProps) {
           {boat.name}
         </h3>
         <div className="nb-boat-specs">
-          <span>⚓ {boat.cabins} kabin</span>
+          <span>⚓ {boat.cabins} {t('cabin')}</span>
           <span>👥 max {boat.maxPax}</span>
           <span>📍 {boat.marina}</span>
         </div>
         <div className="nb-boat-foot">
           <div>
             <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>
-              itibaren
+              {t('from')}
             </div>
             <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--deep)', letterSpacing: '-0.02em' }}>
               €{boat.priceFrom.toLocaleString('tr-TR')}
-              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}> / hafta</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}> {t('per_week')}</span>
             </div>
           </div>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 4 }}>
-            İncele →
+            {t('detail')} →
           </span>
         </div>
       </div>

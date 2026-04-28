@@ -2,7 +2,8 @@
 
 import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -43,6 +44,8 @@ interface PageProps {
 
 export default function RotaDetayPage({ params }: PageProps) {
   const { id } = use(params);
+  const t = useTranslations('routes');
+  const tCommon = useTranslations('common');
 
   const [route, setRoute] = useState<Route | null | undefined>(undefined);
   const [boats, setBoats] = useState<Boat[]>([]);
@@ -71,7 +74,6 @@ export default function RotaDetayPage({ params }: PageProps) {
       .order('display_order', { ascending: true })
       .then(({ data }) => {
         if (!data) return;
-        // Normalise the nested subquery results
         const normalised: Boat[] = data.map((b: any) => ({
           ...b,
           cover_photo: Array.isArray(b.cover_photo) && b.cover_photo.length > 0
@@ -89,7 +91,7 @@ export default function RotaDetayPage({ params }: PageProps) {
   if (route === undefined) {
     return (
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ opacity: 0.4, fontSize: 15 }}>Yükleniyor…</div>
+        <div style={{ opacity: 0.4, fontSize: 15 }}>{tCommon('loading')}</div>
       </div>
     );
   }
@@ -114,7 +116,6 @@ export default function RotaDetayPage({ params }: PageProps) {
           priority
           sizes="100vw"
         />
-        {/* Overlay gradient */}
         <div
           style={{
             position: 'absolute',
@@ -136,13 +137,13 @@ export default function RotaDetayPage({ params }: PageProps) {
         >
           <div className="container">
             <div className="breadcrumb" style={{ color: 'rgba(255,255,255,.65)', marginBottom: 14 }}>
-              <Link href="/" style={{ color: 'inherit' }}>Ana Sayfa</Link>
+              <Link href="/" style={{ color: 'inherit' }}>{t('home')}</Link>
               <span>/</span>
-              <Link href="/rotalar" style={{ color: 'inherit' }}>Rotalar</Link>
+              <Link href="/rotalar" style={{ color: 'inherit' }}>{t('title')}</Link>
               <span>/</span>
               <span style={{ color: 'rgba(255,255,255,.9)' }}>{route.title}</span>
             </div>
-            <div className="eyebrow" style={{ marginBottom: 14 }}>Rota Detayı</div>
+            <div className="eyebrow" style={{ marginBottom: 14 }}>{t('detail_eyebrow')}</div>
             <h1
               style={{
                 fontFamily: 'var(--f-serif,"Playfair Display",serif)',
@@ -169,7 +170,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                   borderRadius: 20,
                 }}
               >
-                {route.days} gün
+                {route.days} {t('day')}
               </span>
               <span
                 style={{
@@ -205,7 +206,7 @@ export default function RotaDetayPage({ params }: PageProps) {
             <div>
               {/* Description */}
               <div style={{ marginBottom: 56 }}>
-                <div className="eyebrow" style={{ marginBottom: 12 }}>Rota Hakkında</div>
+                <div className="eyebrow" style={{ marginBottom: 12 }}>{t('about_route')}</div>
                 <h2
                   style={{
                     fontFamily: 'var(--f-serif,"Playfair Display",serif)',
@@ -217,7 +218,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                     lineHeight: 1.2,
                   }}
                 >
-                  {route.days} günlük deniz macerası
+                  {route.days} {t('sea_adventure')}
                 </h2>
                 <p
                   style={{
@@ -233,7 +234,7 @@ export default function RotaDetayPage({ params }: PageProps) {
 
               {/* Highlights */}
               <div style={{ marginBottom: 56 }}>
-                <div className="eyebrow" style={{ marginBottom: 16 }}>Öne Çıkan Duraklar</div>
+                <div className="eyebrow" style={{ marginBottom: 16 }}>{t('highlights_label')}</div>
                 <h3
                   style={{
                     fontFamily: 'var(--f-serif,"Playfair Display",serif)',
@@ -243,7 +244,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                     color: 'var(--ink)',
                   }}
                 >
-                  Bu rotada sizi neler bekliyor?
+                  {t('what_awaits')}
                 </h3>
                 <div
                   style={{
@@ -313,9 +314,9 @@ export default function RotaDetayPage({ params }: PageProps) {
                 className="nb-route-stats"
               >
                 {[
-                  { label: 'Süre', value: `${route.days} gün` },
-                  { label: 'Zorluk', value: route.difficulty },
-                  { label: 'Durak', value: `${route.highlights.length} nokta` },
+                  { label: t('duration_label'), value: `${route.days} ${t('day')}` },
+                  { label: t('difficulty_label'), value: route.difficulty },
+                  { label: t('stops'), value: `${route.highlights.length} ${t('stops_count')}` },
                 ].map((stat) => (
                   <div key={stat.label} style={{ textAlign: 'center' }}>
                     <div
@@ -358,7 +359,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                   top: 100,
                 }}
               >
-                <div className="eyebrow" style={{ marginBottom: 12 }}>Bu rotayı rezerve edin</div>
+                <div className="eyebrow" style={{ marginBottom: 12 }}>{t('book_route')}</div>
                 <h3
                   style={{
                     fontFamily: 'var(--f-serif,"Playfair Display",serif)',
@@ -389,7 +390,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                       borderRadius: 8,
                     }}
                   >
-                    {route.days} gün
+                    {route.days} {t('day')}
                   </span>
                   <span
                     style={{
@@ -421,7 +422,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                   className="btn btn-primary btn-lg"
                   style={{ width: '100%', justifyContent: 'center', marginBottom: 12, display: 'flex' }}
                 >
-                  Rezervasyon Yap →
+                  {t('book_now')}
                 </Link>
 
                 <Link
@@ -429,7 +430,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                   className="btn btn-ghost"
                   style={{ width: '100%', justifyContent: 'center', display: 'flex' }}
                 >
-                  Bilgi Al
+                  {t('get_info')}
                 </Link>
 
                 <div
@@ -443,9 +444,9 @@ export default function RotaDetayPage({ params }: PageProps) {
                   }}
                 >
                   {[
-                    'Ücretsiz rota danışmanlığı',
-                    'Esnek tarih seçenekleri',
-                    'Kişiselleştirme imkanı',
+                    t('free_consulting'),
+                    t('flexible_dates'),
+                    t('personalization'),
                   ].map((note) => (
                     <div
                       key={note}
@@ -474,7 +475,7 @@ export default function RotaDetayPage({ params }: PageProps) {
       <section style={{ background: 'var(--sand)', padding: '80px 0' }}>
         <div className="container">
           <div style={{ marginBottom: 48 }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Tekne Seçimi</div>
+            <div className="eyebrow" style={{ marginBottom: 12 }}>{t('boat_selection')}</div>
             <h2
               style={{
                 fontFamily: 'var(--f-serif,"Playfair Display",serif)',
@@ -485,10 +486,10 @@ export default function RotaDetayPage({ params }: PageProps) {
                 marginBottom: 12,
               }}
             >
-              Bu Rotaya Uygun Tekneler
+              {t('suitable_boats')}
             </h2>
             <p style={{ fontSize: 16, color: 'var(--muted)', maxWidth: 500 }}>
-              Filomuzdan bu rota için en uygun tekneyi seçin ve reservasyonunuzu tamamlayın.
+              {t('suitable_boats_sub')}
             </p>
           </div>
 
@@ -574,7 +575,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                           marginBottom: 2,
                         }}
                       >
-                        itibaren
+                        {t('from_price')}
                       </span>
                       <span
                         style={{
@@ -600,7 +601,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                         gap: 4,
                       }}
                     >
-                      İncele
+                      {t('view')}
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <polyline points="9 18 15 12 9 6" />
                       </svg>
@@ -623,7 +624,7 @@ export default function RotaDetayPage({ params }: PageProps) {
         }}
       >
         <div className="container">
-          <div className="eyebrow" style={{ marginBottom: 16 }}>Hazır mısınız?</div>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>{t('ready')}</div>
           <h2
             style={{
               fontFamily: 'var(--f-serif,"Playfair Display",serif)',
@@ -633,10 +634,10 @@ export default function RotaDetayPage({ params }: PageProps) {
               marginBottom: 18,
             }}
           >
-            Bu rotayı rezerve edin
+            {t('book_cta')}
           </h2>
           <p style={{ opacity: 0.75, fontSize: 17, maxWidth: 480, marginInline: 'auto', marginBottom: 36 }}>
-            Hemen başlayın — teknenizi seçin, tarihinizi belirleyin ve denize açılın.
+            {t('book_cta_sub')}
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link
@@ -644,14 +645,14 @@ export default function RotaDetayPage({ params }: PageProps) {
               className="btn btn-primary btn-lg"
               style={{ display: 'inline-flex' }}
             >
-              Rezervasyon Yap →
+              {t('book_now_cta')}
             </Link>
             <Link
               href="/rotalar"
               className="btn btn-ghost btn-lg"
               style={{ display: 'inline-flex', color: '#fff', borderColor: 'rgba(255,255,255,.3)' }}
             >
-              Diğer Rotalar
+              {t('other_routes')}
             </Link>
           </div>
         </div>

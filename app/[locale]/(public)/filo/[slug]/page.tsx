@@ -2,38 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { BoatCard, BoatForCard } from '@/components/BoatCard';
-
-const equipmentLabels: Record<string, string> = {
-  navigation: 'Navigasyon',
-  safety: 'Güvenlik',
-  electrics: 'Elektrik & Konfor',
-  deck: 'Güverte',
-  galley: 'Mutfak',
-  interior: 'İç Mekan',
-  entertainment: 'Eğlence',
-};
-
-const monthNames: Record<string, string> = {
-  '04': 'Nisan',
-  '05': 'Mayıs',
-  '06': 'Haziran',
-  '07': 'Temmuz',
-  '08': 'Ağustos',
-  '09': 'Eylül',
-  '10': 'Ekim',
-  '11': 'Kasım',
-  '12': 'Aralık',
-};
-
-// Format ISO date YYYY-MM-DD → DD/MM/YYYY
-function isoToDisplay(iso: string): string {
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-}
 
 const BOAT_SUPPLEMENT: Record<string, {
   charterType: string;
@@ -281,8 +254,16 @@ function toCard(boat: DbBoatWithPhotos): BoatForCard {
   };
 }
 
+// Format ISO date YYYY-MM-DD → DD/MM/YYYY
+function isoToDisplay(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 export default function BoatDetailPage() {
   const params = useParams<{ slug: string }>();
+  const t = useTranslations('boat');
+
   const [boat, setBoat] = useState<DbBoat | null>(null);
   const [photos, setPhotos] = useState<DbPhoto[]>([]);
   const [pricing, setPricing] = useState<DbPricing[]>([]);
@@ -299,10 +280,33 @@ export default function BoatDetailPage() {
   const [charterType, setCharterType] = useState('bareboat');
   const [pax, setPax] = useState('8');
 
+  // Month names for pricing calendar display
+  const monthNames: Record<string, string> = {
+    '04': t('month_april'),
+    '05': t('month_may'),
+    '06': t('month_june'),
+    '07': t('month_july'),
+    '08': t('month_august'),
+    '09': t('month_september'),
+    '10': t('month_october'),
+    '11': t('month_november'),
+    '12': t('month_december'),
+  };
+
+  // Equipment labels for display
+  const equipmentLabels: Record<string, string> = {
+    navigation: t('equip_navigation'),
+    safety: t('equip_safety'),
+    electrics: t('equip_electrics'),
+    deck: t('equip_deck'),
+    galley: t('equip_galley'),
+    interior: t('equip_interior'),
+    entertainment: t('equip_entertainment'),
+  };
+
   useEffect(() => {
     const supabase = createClient();
     async function fetchData() {
-      // 1. Fetch boat by slug
       const { data: boatData } = await supabase
         .from('boats')
         .select('*')
@@ -318,47 +322,37 @@ export default function BoatDetailPage() {
 
       setBoat(boatData);
 
-      // 2. Fetch photos
       const { data: photosData } = await supabase
         .from('boat_photos')
         .select('*')
         .eq('boat_id', boatData.id)
         .order('position');
 
-      // 3. Fetch pricing
       const { data: pricingData } = await supabase
         .from('boat_pricing')
         .select('*')
         .eq('boat_id', boatData.id)
         .order('start_date');
 
-      // 4. Fetch availability blocks for this boat
       const { data: availData } = await supabase
         .from('boat_availability')
         .select('start_date,end_date,status')
-        .eq('boat_id', boatData.id)
+        .eq('boat_id', boatData.id);
 
-      // 5. Fetch non-cancelled bookings for this boat
       const { data: bkgData } = await supabase
         .from('bookings')
         .select('start_date,end_date,status')
         .eq('boat_id', boatData.id)
-        .neq('status', 'cancelled')
+        .neq('status', 'cancelled');
 
-      // 6. Fetch other boats with photos and pricing
       const { data: othersData } = await supabase
         .from('boats')
-        .select(`
-          *,
-          boat_photos(storage_path, position),
-          boat_pricing(weekly_price_eur)
-        `)
+        .select(`*, boat_photos(storage_path, position), boat_pricing(weekly_price_eur)`)
         .eq('active', true)
         .neq('slug', params.slug)
         .order('display_order')
         .limit(3);
 
-      // 5. Fetch suggested routes
       const { data: routesData } = await supabase
         .from('routes')
         .select('*')
@@ -366,8 +360,8 @@ export default function BoatDetailPage() {
         .order('display_order')
         .limit(2);
 
-      const avail = (availData ?? []) as DbAvailability[]
-      const bkgs = (bkgData ?? []) as DbBookingSlot[]
+      const avail = (availData ?? []) as DbAvailability[];
+      const bkgs = (bkgData ?? []) as DbBookingSlot[];
 
       setPhotos((photosData as DbPhoto[]) ?? []);
       setPricing((pricingData as DbPricing[]) ?? []);
@@ -376,14 +370,13 @@ export default function BoatDetailPage() {
       setOtherBoats((othersData as DbBoatWithPhotos[]) ?? []);
       setSuggestedRoutes((routesData as DbRoute[]) ?? []);
 
-      // Set initial selected week to first available week
-      const priceList = (pricingData ?? []) as DbPricing[]
+      const priceList = (pricingData ?? []) as DbPricing[];
       const firstAvail = priceList.findIndex(p => {
-        const s = p.start_date; const e = p.end_date
-        const overlapsAvail = avail.some(a => s <= a.end_date && e >= a.start_date)
-        const overlapsBooking = bkgs.some(b => s <= b.end_date && e >= b.start_date)
-        return !overlapsAvail && !overlapsBooking
-      })
+        const s = p.start_date; const e = p.end_date;
+        const overlapsAvail = avail.some(a => s <= a.end_date && e >= a.start_date);
+        const overlapsBooking = bkgs.some(b => s <= b.end_date && e >= b.start_date);
+        return !overlapsAvail && !overlapsBooking;
+      });
       setSelectedWeek(firstAvail >= 0 ? firstAvail : 0);
 
       setLoading(false);
@@ -400,18 +393,18 @@ export default function BoatDetailPage() {
     return (
       <div style={{ textAlign: 'center', padding: '120px 20px', color: 'var(--muted)' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>⛵</div>
-        <p style={{ fontSize: 16 }}>Tekne yükleniyor…</p>
+        <p style={{ fontSize: 16 }}>{t('loading')}</p>
       </div>
     );
   }
 
   function weekStatus(p: DbPricing): 'available' | 'option' | 'unavailable' {
-    const s = p.start_date; const e = p.end_date
-    if (bookedSlots.some(b => s <= b.end_date && e >= b.start_date)) return 'unavailable'
-    const block = availability.find(a => s <= a.end_date && e >= a.start_date)
-    if (!block) return 'available'
-    if (block.status === 'option') return 'option'
-    return 'unavailable'
+    const s = p.start_date; const e = p.end_date;
+    if (bookedSlots.some(b => s <= b.end_date && e >= b.start_date)) return 'unavailable';
+    const block = availability.find(a => s <= a.end_date && e >= a.start_date);
+    if (!block) return 'available';
+    if (block.status === 'option') return 'option';
+    return 'unavailable';
   }
 
   const supplement = BOAT_SUPPLEMENT[boat.slug] ?? null;
@@ -426,7 +419,6 @@ export default function BoatDetailPage() {
 
   const todayIso = new Date().toISOString().slice(0, 10);
 
-  // Month grouping for pricing calendar — skip past weeks
   const monthMap: Record<string, Array<DbPricing & { i: number }>> = {};
   pricing.forEach((p, i) => {
     if (p.end_date < todayIso) return;
@@ -460,9 +452,9 @@ export default function BoatDetailPage() {
         />}
         <div className="nb-boat-hero-info">
           <div className="breadcrumb" style={{ color: 'rgba(255,255,255,.7)' }}>
-            <Link href="/" style={{ color: 'inherit' }}>Ana Sayfa</Link>
+            <Link href="/" style={{ color: 'inherit' }}>{t('home')}</Link>
             <span>/</span>
-            <Link href="/filo" style={{ color: 'inherit' }}>Filo</Link>
+            <Link href="/filo" style={{ color: 'inherit' }}>{t('fleet')}</Link>
             <span>/</span>
             <span style={{ color: '#fff' }}>{boat.name}</span>
           </div>
@@ -472,7 +464,7 @@ export default function BoatDetailPage() {
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 14, color: 'rgba(255,255,255,.85)' }}>
             <span>⛵ {boat.model}</span>
             <span>📅 {boat.year}</span>
-            <span>🛏 {boat.cabins} kabin</span>
+            <span>🛏 {boat.cabins} {t('cabins')}</span>
             <span>📍 {boat.marina}</span>
           </div>
         </div>
@@ -509,9 +501,9 @@ export default function BoatDetailPage() {
 
           {/* LEFT COLUMN */}
           <div>
-            {/* Tekne Hakkında */}
+            {/* About Boat */}
             <div style={{ marginBottom: 48 }}>
-              <div className="eyebrow" style={{ marginBottom: 8 }}>Tekne hakkında</div>
+              <div className="eyebrow" style={{ marginBottom: 8 }}>{t('about_boat')}</div>
               <h2 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(24px,3vw,36px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 16 }}>
                 {boat.name} — {boat.model}
               </h2>
@@ -520,20 +512,20 @@ export default function BoatDetailPage() {
               </p>
             </div>
 
-            {/* Teknik Detaylar */}
+            {/* Technical Details */}
             <div style={{ marginBottom: 48 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Teknik Detaylar</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>{t('tech_details')}</h3>
               <div className="nb-spec-grid">
                 <div>
                   {([
-                    ['Üretici', boat.brand],
-                    ['Model', boat.model],
-                    ['Yapım Yılı', String(boat.year)],
-                    ['Charter Tipi', supplement?.charterType ?? '—'],
-                    ['Uzunluk', `${boat.length_m} m${supplement?.lengthFt ? ` (${supplement.lengthFt})` : ''}`],
-                    ['Genişlik', `${boat.beam_m} m`],
-                    ['Su çekimi', supplement?.draft ?? '—'],
-                    ['Kabin', String(boat.cabins)],
+                    [t('spec_brand'), boat.brand],
+                    [t('spec_model'), boat.model],
+                    [t('spec_year'), String(boat.year)],
+                    [t('charter_type'), supplement?.charterType ?? '—'],
+                    [t('spec_length'), `${boat.length_m} m${supplement?.lengthFt ? ` (${supplement.lengthFt})` : ''}`],
+                    [t('spec_beam'), `${boat.beam_m} m`],
+                    [t('spec_draft'), supplement?.draft ?? '—'],
+                    [t('cabins'), String(boat.cabins)],
                   ] as [string, string][]).map(([key, val]) => (
                     <div key={key} className="nb-spec-row">
                       <span>{key}</span>
@@ -543,14 +535,14 @@ export default function BoatDetailPage() {
                 </div>
                 <div>
                   {([
-                    ['Yatak', supplement?.berths ?? '—'],
-                    ['Tuvalet', String(boat.bathrooms)],
-                    ['Max. Yolcu', String(boat.max_guests)],
-                    ['Motor', supplement?.engines ?? '—'],
-                    ['Yakıt', supplement?.fuel ?? '—'],
-                    ['Su tankı', supplement?.water ?? '—'],
-                    ['Ana yelken', supplement?.mainSail ?? '—'],
-                    ['Güvence bedeli', `€${boat.deposit_eur.toLocaleString()}`],
+                    [t('spec_berths'), supplement?.berths ?? '—'],
+                    [t('spec_bathrooms'), String(boat.bathrooms)],
+                    [t('spec_max_guests'), String(boat.max_guests)],
+                    [t('spec_engines'), supplement?.engines ?? '—'],
+                    [t('spec_fuel'), supplement?.fuel ?? '—'],
+                    [t('spec_water'), supplement?.water ?? '—'],
+                    [t('spec_mainsail'), supplement?.mainSail ?? '—'],
+                    [t('deposit_amount'), `€${boat.deposit_eur.toLocaleString()}`],
                   ] as [string, string][]).map(([key, val]) => (
                     <div key={key} className="nb-spec-row">
                       <span>{key}</span>
@@ -561,10 +553,10 @@ export default function BoatDetailPage() {
               </div>
             </div>
 
-            {/* Öne Çıkanlar */}
+            {/* Highlights */}
             {(boat.features ?? []).length > 0 && (
               <div style={{ marginBottom: 48 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Öne Çıkanlar</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>{t('highlights')}</h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                   {(boat.features ?? []).map((h) => (
                     <span
@@ -589,10 +581,10 @@ export default function BoatDetailPage() {
               </div>
             )}
 
-            {/* Standart Donanım */}
+            {/* Standard Equipment */}
             {supplement?.equipment && Object.keys(supplement.equipment).length > 0 && (
               <div style={{ marginBottom: 48 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Standart Donanım</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>{t('standard_equipment')}</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
                   {Object.entries(supplement.equipment).map(([group, items]) => (
                     <div
@@ -620,27 +612,27 @@ export default function BoatDetailPage() {
               </div>
             )}
 
-            {/* 2026 Haftalık Fiyat Takvimi */}
+            {/* Pricing Calendar */}
             {pricing.length > 0 && (
               <div style={{ marginBottom: 48 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>2026 Haftalık Fiyat Takvimi</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>{t('pricing_calendar_year')}</h3>
                 {Object.entries(monthMap).map(([key, slots]) => {
                   const [year, month] = key.split('-');
                   const monthLabel = monthNames[month] ?? month;
                   return (
                     <div key={key} style={{ marginBottom: 24 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted,#6b7f9e)', marginBottom: 10 }}>
-                        {monthLabel} {year}&nbsp;<span style={{ fontWeight: 400 }}>| {slots.length} hafta</span>
+                        {monthLabel} {year}&nbsp;<span style={{ fontWeight: 400 }}>| {slots.length} {t('week')}</span>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {slots.map((slot) => {
-                          const ws = weekStatus(slot)
-                          const isUnavail = ws !== 'available'
-                          const isSelected = slot.i === selectedWeek && !isUnavail
+                          const ws = weekStatus(slot);
+                          const isUnavail = ws !== 'available';
+                          const isSelected = slot.i === selectedWeek && !isUnavail;
                           return (
                             <button
                               key={slot.i}
-                              onClick={() => { if (!isUnavail) setSelectedWeek(slot.i) }}
+                              onClick={() => { if (!isUnavail) setSelectedWeek(slot.i); }}
                               disabled={isUnavail}
                               style={{
                                 display: 'flex',
@@ -663,7 +655,7 @@ export default function BoatDetailPage() {
                               <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                 {isUnavail ? (
                                   <span style={{ fontSize: 12, fontWeight: 700, color: ws === 'option' ? '#d97706' : '#6b7280', background: ws === 'option' ? 'rgba(245,158,11,.12)' : 'rgba(107,114,128,.1)', padding: '2px 8px', borderRadius: 6 }}>
-                                    {ws === 'option' ? 'Opsiyonlu' : 'Dolu'}
+                                    {ws === 'option' ? t('optioned') : t('full')}
                                   </span>
                                 ) : (
                                   <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--deep,#13315c)' }}>
@@ -682,7 +674,7 @@ export default function BoatDetailPage() {
                                 )}
                               </span>
                             </button>
-                          )
+                          );
                         })}
                       </div>
                     </div>
@@ -693,11 +685,11 @@ export default function BoatDetailPage() {
 
             {/* Service Pack */}
             <div style={{ marginBottom: 48 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Service Pack</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>{t('service_pack')}</h3>
               <div style={{ background: 'var(--foam,#eef6fa)', borderRadius: 'var(--radius,14px)', padding: '20px 24px', border: '1.5px solid var(--line-2,rgba(11,42,80,.07))' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                  <span style={{ fontWeight: 700, fontSize: 15 }}>Zorunlu Service Pack</span>
-                  <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--deep,#13315c)' }}>€600 / hafta</span>
+                  <span style={{ fontWeight: 700, fontSize: 15 }}>{t('mandatory_service')}</span>
+                  <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--deep,#13315c)' }}>€600 {t('per_week')}</span>
                 </div>
                 <ul style={{ listStyle: 'none', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px' }}>
                   {[
@@ -719,10 +711,10 @@ export default function BoatDetailPage() {
               </div>
             </div>
 
-            {/* Opsiyonel Ekstralar */}
+            {/* Optional Extras */}
             {supplement?.optional && supplement.optional.length > 0 && (
               <div style={{ marginBottom: 48 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Opsiyonel Ekstralar</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>{t('optional_extras')}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {supplement.optional.map((opt) => (
                     <div key={opt.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 10, border: '1.5px solid var(--line-2,rgba(11,42,80,.07))', background: 'var(--card,#fff)' }}>
@@ -737,10 +729,10 @@ export default function BoatDetailPage() {
               </div>
             )}
 
-            {/* Hizmetler */}
+            {/* Services */}
             {supplement?.services && supplement.services.length > 0 && (
               <div style={{ marginBottom: 48 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Hizmetler</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>{t('services')}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {supplement.services.map((svc) => (
                     <div key={svc.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 10, border: '1.5px solid var(--line-2,rgba(11,42,80,.07))', background: 'var(--card,#fff)' }}>
@@ -749,7 +741,7 @@ export default function BoatDetailPage() {
                           {svc.name}
                           {svc.required && (
                             <span style={{ background: 'var(--teal)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                              Zorunlu
+                              {t('mandatory')}
                             </span>
                           )}
                         </div>
@@ -762,10 +754,10 @@ export default function BoatDetailPage() {
               </div>
             )}
 
-            {/* Önerilen Rotalar */}
+            {/* Suggested Routes */}
             {suggestedRoutes.length > 0 && (
               <div style={{ marginBottom: 48 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Önerilen Rotalar</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>{t('suggested_routes')}</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   {suggestedRoutes.map((route) => (
                     <div key={route.id} style={{ borderRadius: 'var(--radius,14px)', overflow: 'hidden', border: '1.5px solid var(--line-2,rgba(11,42,80,.07))', background: 'var(--card,#fff)' }}>
@@ -774,7 +766,7 @@ export default function BoatDetailPage() {
                       </div>
                       <div style={{ padding: '12px 14px' }}>
                         <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{route.title}</div>
-                        <div style={{ fontSize: 12, color: 'var(--muted,#6b7f9e)' }}>{route.days} gün · {route.difficulty}</div>
+                        <div style={{ fontSize: 12, color: 'var(--muted,#6b7f9e)' }}>{route.days} {t('day')} · {route.difficulty}</div>
                       </div>
                     </div>
                   ))}
@@ -792,13 +784,13 @@ export default function BoatDetailPage() {
 
               <div className="nb-price-display" style={{ marginBottom: 20 }}>
                 <span className="price">€{(curPrice?.weekly_price_eur ?? 0).toLocaleString()}</span>
-                <span className="price-unit">/ hafta</span>
+                <span className="price-unit">{t('per_week')}</span>
               </div>
 
               {/* Selects */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
                 <div>
-                  <label className="label">Hafta</label>
+                  <label className="label">{t('week')}</label>
                   <select
                     className="input"
                     value={selectedWeek}
@@ -806,25 +798,25 @@ export default function BoatDetailPage() {
                   >
                     {pricing.map((p, i) => {
                       if (p.end_date < todayIso) return null;
-                      const ws = weekStatus(p)
-                      const isUnavail = ws !== 'available'
+                      const ws = weekStatus(p);
+                      const isUnavail = ws !== 'available';
                       const label = isUnavail
-                        ? `${isoToDisplay(p.start_date)} – ${isoToDisplay(p.end_date)} · ${ws === 'option' ? 'Opsiyonlu' : 'Dolu'}`
-                        : `${isoToDisplay(p.start_date)} – ${isoToDisplay(p.end_date)} · €${p.weekly_price_eur.toLocaleString()}`
-                      return <option key={i} value={i} disabled={isUnavail}>{label}</option>
+                        ? `${isoToDisplay(p.start_date)} – ${isoToDisplay(p.end_date)} · ${ws === 'option' ? t('optioned') : t('full')}`
+                        : `${isoToDisplay(p.start_date)} – ${isoToDisplay(p.end_date)} · €${p.weekly_price_eur.toLocaleString()}`;
+                      return <option key={i} value={i} disabled={isUnavail}>{label}</option>;
                     })}
                   </select>
                 </div>
                 <div>
-                  <label className="label">Kişi Sayısı</label>
+                  <label className="label">{t('guest_count')}</label>
                   <select className="input" value={pax} onChange={(e) => setPax(e.target.value)}>
                     {[2, 4, 6, 8, 10].map((n) => (
-                      <option key={n} value={n}>{n} kişi</option>
+                      <option key={n} value={n}>{n} {t('guests')}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="label">Charter Tipi</label>
+                  <label className="label">{t('charter_type')}</label>
                   <select className="input" value={charterType} onChange={(e) => setCharterType(e.target.value)}>
                     <option value="bareboat">Bareboat</option>
                     <option value="skippered">Skippered +€1.400</option>
@@ -833,13 +825,13 @@ export default function BoatDetailPage() {
                 </div>
               </div>
 
-              {/* Ekstralar */}
+              {/* Extras */}
               <div style={{ marginBottom: 20 }}>
-                <div className="label" style={{ marginBottom: 10 }}>Ekstralar</div>
+                <div className="label" style={{ marginBottom: 10 }}>{t('extras')}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {([
-                    { key: 'skipper', label: 'Kaptan', price: 1400 },
-                    { key: 'hostess', label: 'Hostes', price: 1250 },
+                    { key: 'skipper', label: t('captain'), price: 1400 },
+                    { key: 'hostess', label: t('hostess'), price: 1250 },
                     { key: 'sup', label: 'SUP', price: 120 },
                     { key: 'wifi', label: 'Wi-Fi', price: 75 },
                   ] as const).map(({ key, label, price }) => (
@@ -857,12 +849,12 @@ export default function BoatDetailPage() {
                 </div>
               </div>
 
-              {/* Fiyat Özeti */}
+              {/* Price Summary */}
               <div style={{ borderTop: '1px solid var(--line-2,rgba(11,42,80,.07))', paddingTop: 16, marginBottom: 20 }}>
                 {([
-                  ['Haftalık tekne', `€${(curPrice?.weekly_price_eur ?? 0).toLocaleString()}`],
-                  ['Service pack', `€${servicePack.toLocaleString()}`],
-                  ...(extrasCost > 0 ? [['Ekstralar', `€${extrasCost.toLocaleString()}`]] : []),
+                  [t('weekly_boat'), `€${(curPrice?.weekly_price_eur ?? 0).toLocaleString()}`],
+                  [t('service_pack'), `€${servicePack.toLocaleString()}`],
+                  ...(extrasCost > 0 ? [[t('extras'), `€${extrasCost.toLocaleString()}`]] : []),
                 ] as [string, string][]).map(([label, val]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--muted,#6b7f9e)', marginBottom: 8 }}>
                     <span>{label}</span>
@@ -870,17 +862,17 @@ export default function BoatDetailPage() {
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 18, fontWeight: 800, color: 'var(--deep,#13315c)', paddingTop: 10, borderTop: '1px solid var(--line-2,rgba(11,42,80,.07))' }}>
-                  <span>Toplam</span>
+                  <span>{t('total')}</span>
                   <span>€{total.toLocaleString()}</span>
                 </div>
               </div>
 
-              {/* Güvence Notları */}
+              {/* Guarantee Notes */}
               <div className="nb-booking-features" style={{ marginBottom: 20 }}>
                 {[
-                  'Ücretsiz iptal (7 güne kadar)',
-                  '%50 peşin, kalan check-in\'de',
-                  `Güvence bedeli: €${boat.deposit_eur.toLocaleString()}`,
+                  t('free_cancel'),
+                  t('payment_split'),
+                  `${t('deposit_amount')}: €${boat.deposit_eur.toLocaleString()}`,
                 ].map((note) => (
                   <div key={note}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
@@ -892,15 +884,15 @@ export default function BoatDetailPage() {
               {/* CTA */}
               {curPrice && weekStatus(curPrice) !== 'available' && (
                 <div style={{ background: 'rgba(107,114,128,.08)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#6b7280', textAlign: 'center', fontWeight: 600 }}>
-                  {weekStatus(curPrice) === 'option' ? 'Bu hafta opsiyonlu — WhatsApp\'tan sorun' : 'Bu hafta dolu — başka bir tarih seçin'}
+                  {weekStatus(curPrice) === 'option' ? t('option_whatsapp') : t('full_select_other')}
                 </div>
               )}
               <Link
                 href={curPrice && weekStatus(curPrice) === 'available' ? `/rezervasyon?boat=${boat.slug}&start=${curPrice.start_date}&end=${curPrice.end_date}` : '#'}
                 className="btn btn-primary btn-lg"
-                onClick={e => { if (!curPrice || weekStatus(curPrice) !== 'available') e.preventDefault() }}
+                onClick={e => { if (!curPrice || weekStatus(curPrice) !== 'available') e.preventDefault(); }}
                 style={{ width: '100%', justifyContent: 'center', marginBottom: 12, opacity: curPrice && weekStatus(curPrice) !== 'available' ? 0.4 : 1, pointerEvents: curPrice && weekStatus(curPrice) !== 'available' ? 'none' : 'auto' }}>
-                Rezervasyona devam →
+                {t('proceed_booking')}
               </Link>
               <a
                 href={`https://wa.me/905321234567?text=Merhaba, ${encodeURIComponent(boat.name)} için bilgi almak istiyorum.`}
@@ -909,7 +901,7 @@ export default function BoatDetailPage() {
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: '#25d366', textDecoration: 'none' }}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.464 3.488" /></svg>
-                WhatsApp'tan yazın
+                {t('whatsapp_contact')}
               </a>
             </div>
           </div>
@@ -917,16 +909,16 @@ export default function BoatDetailPage() {
         </div>
       </div>
 
-      {/* Diğer Tekneler */}
+      {/* Other Boats */}
       {otherBoats.length > 0 && (
         <section className="nb-section-tight nb-section-sand">
           <div className="container">
             <div style={{ marginBottom: 40 }}>
-              <div className="eyebrow" style={{ marginBottom: 8 }}>Filo</div>
+              <div className="eyebrow" style={{ marginBottom: 8 }}>{t('fleet')}</div>
               <h2 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(24px,3vw,36px)', fontWeight: 700, letterSpacing: '-0.02em' }}>
-                Diğer teknelerimiz
+                {t('other_boats')}
               </h2>
-              <p style={{ color: 'var(--muted,#6b7f9e)', marginTop: 8 }}>Bu da ilginizi çekebilir</p>
+              <p style={{ color: 'var(--muted,#6b7f9e)', marginTop: 8 }}>{t('other_boats_sub')}</p>
             </div>
             <div className="nb-fleet-grid">
               {otherBoats.map((b) => (

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 type Profile = {
@@ -33,22 +34,22 @@ type Booking = {
   } | null;
 };
 
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  pending:   { label: 'Ödeme bekleniyor', color: '#92400e', bg: 'rgba(245,158,11,.12)' },
-  confirmed: { label: 'Onaylı',           color: '#065f46', bg: 'rgba(16,185,129,.12)' },
-  completed: { label: 'Tamamlandı',       color: 'var(--muted)', bg: 'var(--foam)' },
-  cancelled: { label: 'İptal',            color: '#991b1b', bg: 'rgba(239,68,68,.12)' },
+const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  pending:   { color: '#92400e', bg: 'rgba(245,158,11,.12)' },
+  confirmed: { color: '#065f46', bg: 'rgba(16,185,129,.12)' },
+  completed: { color: 'var(--muted)', bg: 'var(--foam)' },
+  cancelled: { color: '#991b1b', bg: 'rgba(239,68,68,.12)' },
 };
 
-function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_MAP[status] ?? { label: status, color: 'var(--muted)', bg: 'var(--foam)' };
+function StatusBadge({ status, label }: { status: string; label: string }) {
+  const cfg = STATUS_STYLE[status] ?? { color: 'var(--muted)', bg: 'var(--foam)' };
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
       padding: '4px 10px', background: cfg.bg, color: cfg.color,
       fontSize: 12, fontWeight: 600, borderRadius: 99,
     }}>
-      ● {cfg.label}
+      ● {label}
     </span>
   );
 }
@@ -58,20 +59,22 @@ function formatDate(iso: string) {
   return `${d}/${m}/${y}`;
 }
 
-const NAV_ITEMS = [
-  { k: 'reservations', l: 'Rezervasyonlarım' },
-  { k: 'past',         l: 'Geçmiş seyahatler' },
-  { k: 'profile',      l: 'Profil & güvenlik' },
-  { k: 'invoices',     l: 'Fatura & belgeler' },
-];
-
 export default function HesabimPage() {
+  const t = useTranslations('account');
+  const ts = useTranslations('status');
+  const tc = useTranslations('common');
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('reservations');
   const [profileForm, setProfileForm] = useState({ full_name: '', phone: '', country: '' });
+  const NAV_ITEMS = [
+    { k: 'reservations', l: t('tab_reservations') },
+    { k: 'past',         l: t('past_trips') },
+    { k: 'profile',      l: t('profile_security') },
+    { k: 'invoices',     l: t('invoices') },
+  ];
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
 
@@ -123,7 +126,7 @@ export default function HesabimPage() {
   if (loading) {
     return (
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 15 }}>
-        Yükleniyor…
+        {tc('loading')}
       </div>
     );
   }
@@ -142,9 +145,9 @@ export default function HesabimPage() {
     <>
       <div className="nb-page-head">
         <div className="container">
-          <h1>Hesabım</h1>
+          <h1>{t('title')}</h1>
           <p style={{ maxWidth: 560, opacity: 0.85, fontSize: 17 }}>
-            Hoş geldiniz{profile?.full_name ? `, ${profile.full_name}` : ''}. Rezervasyonlarınızı buradan yönetebilirsiniz.
+            {t('welcome')}{profile?.full_name ? `, ${profile.full_name}` : ''}. {t('manage_sub')}
           </p>
         </div>
       </div>
@@ -196,7 +199,7 @@ export default function HesabimPage() {
                   padding: '10px 12px', border: 'none', background: 'transparent',
                   color: 'var(--muted)', borderRadius: 8, fontSize: 14, cursor: 'pointer', textAlign: 'left',
                 }}>
-                  Çıkış yap
+                  {t('sign_out')}
                 </button>
               </nav>
             </aside>
@@ -209,15 +212,15 @@ export default function HesabimPage() {
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                     <h2 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 26, fontWeight: 700, color: 'var(--ink)' }}>
-                      Aktif rezervasyonlar
+                      {t('active_reservations')}
                     </h2>
-                    <Link href="/filo" className="btn btn-primary btn-sm">Yeni rezervasyon</Link>
+                    <Link href="/filo" className="btn btn-primary btn-sm">{t('new_reservation')}</Link>
                   </div>
 
                   {activeBookings.length === 0 ? (
                     <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '60px 40px', textAlign: 'center' }}>
-                      <p style={{ fontSize: 15, color: 'var(--muted)', marginBottom: 20 }}>Aktif rezervasyonunuz yok.</p>
-                      <Link href="/filo" className="btn btn-primary btn-sm">Tekne seç</Link>
+                      <p style={{ fontSize: 15, color: 'var(--muted)', marginBottom: 20 }}>{t('no_active')}</p>
+                      <Link href="/filo" className="btn btn-primary btn-sm">{t('select_boat')}</Link>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -241,31 +244,31 @@ export default function HesabimPage() {
                                   <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{r.code}</div>
                                   <h3 style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', marginTop: 4 }}>{r.boats?.name ?? '—'}</h3>
                                 </div>
-                                <StatusBadge status={r.status} />
+                                <StatusBadge status={r.status} label={ts(r.status as 'pending' | 'confirmed' | 'completed' | 'cancelled')} />
                               </div>
                               <div style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--muted)', marginBottom: 14, flexWrap: 'wrap' }}>
                                 <span>{formatDate(r.start_date)} → {formatDate(r.end_date)}</span>
-                                <span>{r.guest_count} kişi</span>
+                                <span>{r.guest_count} {tc('person')}</span>
                                 {r.boats?.marina && <span>{r.boats.marina}</span>}
                               </div>
                               <div style={{ padding: '12px 14px', background: 'var(--foam)', borderRadius: 10, marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                                 <div>
-                                  <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Toplam · Kalan</div>
+                                  <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('total_remaining')}</div>
                                   <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2, color: 'var(--ink)' }}>
                                     €{r.total_amount.toLocaleString('tr-TR')}
                                     {r.balance_amount > 0 && (
-                                      <span style={{ color: 'var(--muted)', fontWeight: 500 }}> · €{r.balance_amount.toLocaleString('tr-TR')} kalan</span>
+                                      <span style={{ color: 'var(--muted)', fontWeight: 500 }}> · €{r.balance_amount.toLocaleString('tr-TR')} {t('remaining')}</span>
                                     )}
                                   </div>
                                 </div>
                                 {r.status === 'pending' && (
-                                  <button className="btn btn-primary btn-sm">%50 ödemeyi yap</button>
+                                  <button className="btn btn-primary btn-sm">{t('pay_deposit')}</button>
                                 )}
                               </div>
                               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                <Link href={`/hesabim/rezervasyon/${r.code}`} className="btn btn-ghost btn-sm">Detaylar</Link>
+                                <Link href={`/hesabim/rezervasyon/${r.code}`} className="btn btn-ghost btn-sm">{t('details')}</Link>
                                 {r.boats?.slug && (
-                                  <Link href={`/filo/${r.boats.slug}`} className="btn btn-ghost btn-sm">Tekneyi gör</Link>
+                                  <Link href={`/filo/${r.boats.slug}`} className="btn btn-ghost btn-sm">{t('view_boat')}</Link>
                                 )}
                               </div>
                             </div>
@@ -281,11 +284,11 @@ export default function HesabimPage() {
               {tab === 'past' && (
                 <>
                   <h2 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 26, fontWeight: 700, color: 'var(--ink)', marginBottom: 24 }}>
-                    Geçmiş seyahatler
+                    {t('past_trips')}
                   </h2>
                   {pastBookings.length === 0 ? (
                     <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '60px 40px', textAlign: 'center' }}>
-                      <p style={{ fontSize: 15, color: 'var(--muted)' }}>Henüz geçmiş seyahatiniz yok.</p>
+                      <p style={{ fontSize: 15, color: 'var(--muted)' }}>{t('no_past')}</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -307,10 +310,10 @@ export default function HesabimPage() {
                               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{r.code}</div>
                               <h3 style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', marginTop: 4, marginBottom: 8 }}>{r.boats?.name ?? '—'}</h3>
                               <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
-                                {formatDate(r.start_date)} → {formatDate(r.end_date)} · {r.guest_count} kişi · €{r.total_amount.toLocaleString('tr-TR')}
+                                {formatDate(r.start_date)} → {formatDate(r.end_date)} · {r.guest_count} {tc('person')} · €{r.total_amount.toLocaleString('tr-TR')}
                               </div>
                               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                <Link href={`/hesabim/rezervasyon/${r.code}`} className="btn btn-ghost btn-sm">Detaylar</Link>
+                                <Link href={`/hesabim/rezervasyon/${r.code}`} className="btn btn-ghost btn-sm">{t('details')}</Link>
                               </div>
                             </div>
                           </div>
@@ -325,34 +328,34 @@ export default function HesabimPage() {
               {tab === 'profile' && (
                 <>
                   <h2 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 26, fontWeight: 700, color: 'var(--ink)', marginBottom: 24 }}>
-                    Profil & güvenlik
+                    {t('profile_security')}
                   </h2>
                   <form onSubmit={handleSaveProfile}>
                     <div style={{ background: 'var(--card)', padding: 28, borderRadius: 'var(--radius-lg)', border: '1px solid var(--line)', marginBottom: 16 }}>
                       <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 18, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
-                        Kişisel bilgiler
+                        {t('personal_info')}
                       </h4>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                         <div>
-                          <label className="label">Ad Soyad</label>
-                          <input className="input" value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} placeholder="Adınız Soyadınız" />
+                          <label className="label">{t('full_name')}</label>
+                          <input className="input" value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} />
                         </div>
                         <div>
-                          <label className="label">E-posta</label>
+                          <label className="label">{t('email')}</label>
                           <input className="input" value={profile?.email ?? ''} disabled style={{ opacity: 0.6 }} />
                         </div>
                         <div>
-                          <label className="label">Telefon</label>
+                          <label className="label">{t('phone')}</label>
                           <input className="input" value={profileForm.phone} onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))} placeholder="+90 ..." />
                         </div>
                         <div>
-                          <label className="label">Ülke</label>
-                          <input className="input" value={profileForm.country} onChange={e => setProfileForm(p => ({ ...p, country: e.target.value }))} placeholder="Türkiye" />
+                          <label className="label">{t('country')}</label>
+                          <input className="input" value={profileForm.country} onChange={e => setProfileForm(p => ({ ...p, country: e.target.value }))} />
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
                         <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
-                          {saving ? 'Kaydediliyor…' : 'Kaydet'}
+                          {saving ? t('saving') : t('save')}
                         </button>
                         {saveMsg && <span style={{ fontSize: 13, color: '#065f46', fontWeight: 600 }}>{saveMsg}</span>}
                       </div>
@@ -365,11 +368,11 @@ export default function HesabimPage() {
               {tab === 'invoices' && (
                 <>
                   <h2 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 26, fontWeight: 700, color: 'var(--ink)', marginBottom: 24 }}>
-                    Fatura & belgeler
+                    {t('invoices')}
                   </h2>
                   {bookings.length === 0 ? (
                     <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '60px 40px', textAlign: 'center' }}>
-                      <p style={{ fontSize: 15, color: 'var(--muted)' }}>Henüz fatura bulunmuyor.</p>
+                      <p style={{ fontSize: 15, color: 'var(--muted)' }}>{t('no_invoices')}</p>
                     </div>
                   ) : (
                     <div style={{ background: 'var(--card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--line)', overflow: 'hidden' }}>
@@ -385,7 +388,7 @@ export default function HesabimPage() {
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                             <span style={{ fontWeight: 700, color: 'var(--ink)' }}>€{r.total_amount.toLocaleString('tr-TR')}</span>
-                            <StatusBadge status={r.status} />
+                            <StatusBadge status={r.status} label={ts(r.status as 'pending' | 'confirmed' | 'completed' | 'cancelled')} />
                           </div>
                         </div>
                       ))}

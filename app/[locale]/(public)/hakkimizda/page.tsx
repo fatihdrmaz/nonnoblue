@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 const STATS = [
@@ -62,6 +63,7 @@ const VALUES = [
 ];
 
 export default function HakkimizdaPage() {
+  const t = useTranslations('about');
   const [team, setTeam] = useState<TeamMember[]>([]);
 
   useEffect(() => {
@@ -82,16 +84,16 @@ export default function HakkimizdaPage() {
       <div className="nb-page-head">
         <div className="container">
           <div className="breadcrumb" style={{ color: 'rgba(255,255,255,.6)', marginBottom: 24 }}>
-            <Link href="/" style={{ color: 'inherit' }}>Ana Sayfa</Link>
+            <Link href="/" style={{ color: 'inherit' }}>{t('home')}</Link>
             <span>/</span>
-            <span style={{ color: 'rgba(255,255,255,.9)' }}>Hakkımızda</span>
+            <span style={{ color: 'rgba(255,255,255,.9)' }}>{t('title')}</span>
           </div>
-          <div className="eyebrow" style={{ marginBottom: 16 }}>Hakkımızda</div>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>{t('page_eyebrow')}</div>
           <h1 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(36px,5vw,64px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 20, maxWidth: 720, lineHeight: 1.15 }}>
-            Hikayemiz
+            {t('story_title')}
           </h1>
           <p style={{ fontSize: 17, opacity: 0.85, maxWidth: 620, lineHeight: 1.7 }}>
-            2020&apos;de Göcek&apos;te bir katamaranla başlayan, bugün 4 katamaranlık bir filoya ulaşan bir aile hikayesi.
+            {t('story_sub')}
           </p>
         </div>
       </div>
@@ -124,22 +126,22 @@ export default function HakkimizdaPage() {
               />
             </div>
             <div>
-              <div className="eyebrow" style={{ marginBottom: 14 }}>2020 – Bugün</div>
+              <div className="eyebrow" style={{ marginBottom: 14 }}>{t('story_period')}</div>
               <h2 className="display" style={{ fontSize: 'clamp(28px,3.5vw,44px)', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: 24, fontWeight: 700 }}>
-                Dedemizin ismini taşıyan bir deniz kültürü
+                {t('story_heading')}
               </h2>
               <p style={{ fontSize: 17, lineHeight: 1.7, color: 'var(--muted)', marginBottom: 20 }}>
-                &ldquo;Nonno&rdquo;, İtalyanca&apos;da dede demek. Mehmet Bey&apos;in dedesi İzmir&apos;de balıkçılık yapardı — denizi, teknenin her ayrıntısını, bir konuğa ikram etmenin inceliğini ondan öğrendik.
+                {t('story_p1')}
               </p>
               <p style={{ fontSize: 17, lineHeight: 1.7, color: 'var(--muted)', marginBottom: 20 }}>
-                2020&apos;de pandeminin ortasında, yeni bir iş kurmak cesaret isteyen bir karardı. Bir katamaranla başladık. Bugün dört katamaranla — hepsi 2021 ve sonrası model, Lagoon ve Excess — Göcek ve D-Marin&apos;den hareket ediyoruz. Ama filonun büyümesinden çok, her misafirimizin bir sonraki sezon geri dönmesi bizim için gurur verici.
+                {t('story_p2')}
               </p>
               <p style={{ fontSize: 17, lineHeight: 1.7, color: 'var(--muted)' }}>
-                Bugün Göcek Marina ve D-Marin&apos;den hizmet veriyoruz. Bir aile işletmesi olmanın tüm sıcaklığı ve bir profesyonel filonun tüm standardıyla.
+                {t('story_p3')}
               </p>
               <div style={{ marginTop: 32 }}>
                 <Link href="/iletisim" className="btn btn-primary">
-                  Bize Ulaşın
+                  {t('contact_us')}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12"/>
                     <polyline points="12 5 19 12 12 19"/>
@@ -155,9 +157,9 @@ export default function HakkimizdaPage() {
       <section className="nb-section-tight nb-section-sand">
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div className="eyebrow" style={{ marginBottom: 14 }}>Değerlerimiz</div>
+            <div className="eyebrow" style={{ marginBottom: 14 }}>{t('values_eyebrow')}</div>
             <h2 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(28px,3.5vw,44px)', fontWeight: 700, letterSpacing: '-0.02em' }}>
-              Neden biz?
+              {t('values_title')}
             </h2>
           </div>
           <div className="nb-features">
@@ -177,9 +179,9 @@ export default function HakkimizdaPage() {
       <section className="nb-section">
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div className="eyebrow" style={{ marginBottom: 14 }}>Ekip</div>
+            <div className="eyebrow" style={{ marginBottom: 14 }}>{t('team_eyebrow')}</div>
             <h2 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(28px,3.5vw,44px)', fontWeight: 700, letterSpacing: '-0.02em' }}>
-              NonnoBlue ailesi
+              {t('team_family')}
             </h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 24 }}>
@@ -211,15 +213,15 @@ export default function HakkimizdaPage() {
       {/* CTA */}
       <section className="nb-cta">
         <div className="nb-cta-inner">
-          <div className="eyebrow" style={{ color: 'var(--sky)', marginBottom: 16 }}>2026 yaz sezonu</div>
+          <div className="eyebrow" style={{ color: 'var(--sky)', marginBottom: 16 }}>{t('cta_eyebrow')}</div>
           <h2 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(28px,3.5vw,44px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 16 }}>
-            Hayalinizi birlikte planlayalım
+            {t('cta_title')}
           </h2>
           <p style={{ opacity: 0.75, fontSize: 17, marginBottom: 36, maxWidth: 480 }}>
-            Göcek&apos;ten başlayan bir yolculuk için bizimle iletişime geçin.
+            {t('cta_sub')}
           </p>
           <Link href="/filo" className="btn btn-white btn-lg">
-            Filoyu İncele
+            {t('cta_btn')}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"/>
               <polyline points="12 5 19 12 12 19"/>

@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { Logo } from '@/components/Logo';
 import { createClient } from '@/lib/supabase/client';
 
 export default function KayitPage() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -57,10 +59,10 @@ export default function KayitPage() {
       </div>
 
       <h1 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 26, fontWeight: 700, color: 'var(--ink)', textAlign: 'center', marginBottom: 6, letterSpacing: '-0.01em' }}>
-        Hesap Oluşturun
+        {t('register_title')}
       </h1>
       <p style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 14, marginBottom: 28, lineHeight: 1.5 }}>
-        E-posta adresinize kayıt bağlantısı göndereceğiz
+        {t('login_subtitle')}
       </p>
 
       {sent ? (
@@ -70,13 +72,13 @@ export default function KayitPage() {
             <path d="M12 20.5l6 6 10-12" stroke="var(--teal)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <p style={{ color: 'var(--teal)', fontWeight: 600, fontSize: 14, textAlign: 'center', margin: 0 }}>
-            Kayıt bağlantısı gönderildi! E-postanızı onaylayın.
+            {t('magic_link_sent')}
           </p>
         </div>
       ) : (
         <form onSubmit={handleSignup} style={{ marginBottom: 20 }}>
           <div style={{ marginBottom: 16 }}>
-            <label htmlFor="email" className="label">E-posta</label>
+            <label htmlFor="email" className="label">{t('login_email')}</label>
             <input
               id="email"
               type="email"
@@ -98,7 +100,7 @@ export default function KayitPage() {
             className="btn btn-primary"
             style={{ width: '100%', justifyContent: 'center', opacity: loading ? 0.7 : 1 }}
           >
-            {loading ? 'Gönderiliyor…' : 'Kayıt Bağlantısı Gönder'}
+            {loading ? '…' : t('login_submit')}
           </button>
         </form>
       )}
@@ -106,7 +108,7 @@ export default function KayitPage() {
       {/* Divider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0', color: 'var(--muted)', fontSize: 13 }}>
         <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
-        veya
+        {t('or')}
         <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
       </div>
 
@@ -123,13 +125,13 @@ export default function KayitPage() {
           <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" />
           <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335" />
         </svg>
-        Google ile Kayıt Ol
+        Google
       </button>
 
       <p style={{ textAlign: 'center', marginTop: 24, fontSize: 14, color: 'var(--muted)' }}>
-        Zaten hesabınız var mı?{' '}
+        {t('have_account')}{' '}
         <Link href="/giris" style={{ color: 'var(--teal)', fontWeight: 600, textDecoration: 'none' }}>
-          Giriş Yap
+          {t('login_title')}
         </Link>
       </p>
     </div>

@@ -1,4 +1,8 @@
+'use client';
+import { useTranslations } from 'next-intl';
+
 export default function KariyerPage() {
+  const t = useTranslations('careers');
   const positions = [
     {
       title: "Deneyimli Kaptan",
@@ -50,7 +54,7 @@ export default function KariyerPage() {
             marginBottom: 12,
           }}
         >
-          Kariyer
+          {t('title')}
         </p>
         <h1
           style={{
@@ -61,7 +65,7 @@ export default function KariyerPage() {
             fontWeight: 700,
           }}
         >
-          Ekibimize Katılın
+          {t('subtitle')}
         </h1>
         <p style={{ color: "rgba(255,255,255,0.6)", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
           NonnoBlue&apos;da her sezon yeni yetenekler arıyoruz. Denizle ve insanlarla çalışmayı seviyorsanız doğru yerdesiniz.

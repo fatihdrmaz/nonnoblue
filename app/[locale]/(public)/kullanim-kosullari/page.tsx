@@ -1,4 +1,8 @@
+'use client';
+import { useTranslations } from 'next-intl';
+
 export default function KullanimKosullariPage() {
+  const t = useTranslations('terms');
   return (
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
       <div
@@ -19,7 +23,7 @@ export default function KullanimKosullariPage() {
             margin: 0,
           }}
         >
-          Kullanım Koşulları
+          {t('title')}
         </h1>
       </div>
 

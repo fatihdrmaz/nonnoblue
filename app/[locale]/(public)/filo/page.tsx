@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo, useEffect } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { BoatCard, BoatForCard } from '@/components/BoatCard';
 import { BOATS } from '@/data/mock';
@@ -76,6 +77,7 @@ function formatPrice(n: number) {
 }
 
 export default function FiloPage() {
+  const t = useTranslations('fleet');
   const [dbBoats, setDbBoats] = useState<DbBoat[]>([]);
   const [useMock, setUseMock] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -99,7 +101,6 @@ export default function FiloPage() {
         if (!error && data && data.length > 0) {
           setDbBoats(data as DbBoat[]);
         } else {
-          // Supabase boş/hatalı dönerse mock data kullan
           setUseMock(true);
         }
         setLoading(false);
@@ -165,29 +166,29 @@ export default function FiloPage() {
 
   const sidebar = (
     <aside className="nb-filter">
-      {/* Tekne Tipi */}
+      {/* Boat Type */}
       <div className="nb-filter-section">
-        <h4>Tekne Tipi</h4>
+        <h4>{t('boat_type')}</h4>
         <div>
-          {['all', 'Katamaran'].map((t) => (
+          {['all', 'Katamaran'].map((tp) => (
             <button
-              key={t}
+              key={tp}
               className="nb-filter-chip"
-              data-active={type === t}
-              onClick={() => setType(t)}
+              data-active={type === tp}
+              onClick={() => setType(tp)}
             >
-              {t === 'all' ? 'Tümü' : t}
+              {tp === 'all' ? t('all') : tp}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Kişi Sayısı */}
+      {/* Guest Count */}
       <div className="nb-filter-section">
-        <h4>Kişi Sayısı</h4>
+        <h4>{t('guest_count')}</h4>
         <div>
           {[
-            { label: 'Tümü', val: 0 },
+            { label: t('all'), val: 0 },
             { label: '4+', val: 4 },
             { label: '6+', val: 6 },
             { label: '8+', val: 8 },
@@ -204,9 +205,9 @@ export default function FiloPage() {
         </div>
       </div>
 
-      {/* Haftalık Fiyat */}
+      {/* Weekly Price */}
       <div className="nb-filter-section">
-        <h4>Haftalık Fiyat</h4>
+        <h4>{t('weekly_price')}</h4>
         <input
           type="range"
           min={1000}
@@ -224,7 +225,7 @@ export default function FiloPage() {
 
       {/* Marina */}
       <div className="nb-filter-section">
-        <h4>Marina</h4>
+        <h4>{t('marina')}</h4>
         {ALL_MARINAS.map((m) => (
           <label
             key={m}
@@ -249,9 +250,9 @@ export default function FiloPage() {
         ))}
       </div>
 
-      {/* Ekstra Özellikler */}
+      {/* Extra Features */}
       <div className="nb-filter-section">
-        <h4>Ekstra Özellikler</h4>
+        <h4>{t('extra_features')}</h4>
         {ALL_EXTRAS.map((ex) => (
           <label
             key={ex}
@@ -278,7 +279,7 @@ export default function FiloPage() {
 
       {/* Reset */}
       <button className="btn btn-ghost" style={{ width: '100%' }} onClick={resetFilters}>
-        Filtreleri Sıfırla
+        {t('reset_filters')}
       </button>
     </aside>
   );
@@ -289,13 +290,13 @@ export default function FiloPage() {
       <div className="nb-page-head">
         <div className="container">
           <div className="breadcrumb">
-            <Link href="/">Ana Sayfa</Link>
+            <Link href="/">{t('home')}</Link>
             <span>/</span>
-            <span>Filo</span>
+            <span>{t('title')}</span>
           </div>
-          <h1>Filomuz</h1>
+          <h1>{t('title')}</h1>
           <p style={{ opacity: 0.8, fontSize: 17, maxWidth: 480 }}>
-            4 katamaran · Göcek &amp; D-Marin. Her biri aile özeniyle hazırlanıyor.
+            {t('subtitle')}
           </p>
         </div>
       </div>
@@ -311,7 +312,7 @@ export default function FiloPage() {
               onClick={() => setMobileFilterOpen((v) => !v)}
               style={{ marginBottom: 20 }}
             >
-              {mobileFilterOpen ? 'Filtreleri Gizle ▲' : 'Filtreleri Göster ▼'}
+              {mobileFilterOpen ? t('hide_filters') : t('show_filters')}
             </button>
           </div>
 
@@ -336,7 +337,7 @@ export default function FiloPage() {
               >
                 <p style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 500 }}>
                   <strong style={{ color: 'var(--ink)', fontWeight: 700 }}>{loading ? '…' : filtered.length}</strong>{' '}
-                  tekne bulundu
+                  {t('boats_found')}
                 </p>
                 <select
                   className="input"
@@ -344,9 +345,9 @@ export default function FiloPage() {
                   value={sort}
                   onChange={(e) => setSort(e.target.value as typeof sort)}
                 >
-                  <option value="price-asc">Fiyat: düşükten yükseğe</option>
-                  <option value="price-desc">Fiyat: yüksekten düşüğe</option>
-                  <option value="year">Yeni → eski</option>
+                  <option value="price-asc">{t('price_asc')}</option>
+                  <option value="price-desc">{t('price_desc')}</option>
+                  <option value="year">{t('newest')}</option>
                 </select>
               </div>
 
@@ -354,7 +355,7 @@ export default function FiloPage() {
               {loading ? (
                 <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--muted)' }}>
                   <div style={{ fontSize: 32, marginBottom: 16 }}>⛵</div>
-                  <p style={{ fontSize: 15 }}>Tekneler yükleniyor…</p>
+                  <p style={{ fontSize: 15 }}>{t('loading')}</p>
                 </div>
               ) : filtered.length > 0 ? (
                 <div className="nb-fleet-grid">
@@ -379,13 +380,13 @@ export default function FiloPage() {
                       marginBottom: 8,
                     }}
                   >
-                    Filtreye uyan tekne yok
+                    {t('no_results')}
                   </h3>
                   <p style={{ fontSize: 14, marginBottom: 24 }}>
-                    Filtre kriterlerinizi genişletmeyi deneyin.
+                    {t('no_results_sub')}
                   </p>
                   <button className="btn btn-ghost" onClick={resetFilters}>
-                    Filtreleri Sıfırla
+                    {t('reset_filters')}
                   </button>
                 </div>
               )}
