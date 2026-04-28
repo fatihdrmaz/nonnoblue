@@ -59,7 +59,7 @@ export default function RezervasyonDetayPage() {
       .single()
       .then(({ data, error }) => {
         if (error || !data) { setNotFoundState(true); setLoading(false); return; }
-        setBooking(data as Booking);
+        setBooking(data as unknown as Booking);
         setLoading(false);
       });
   }, [code]);
