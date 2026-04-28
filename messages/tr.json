@@ -35,6 +35,7 @@
     "show_filters": "Filtreleri Göster",
     "hide_filters": "Filtreleri Gizle",
     "boats_found": "tekne bulundu",
+    "recommended": "Önerilen",
     "price_asc": "Fiyat: düşükten yükseğe",
     "price_desc": "Fiyat: yüksekten düşüğe",
     "newest": "Yeni → eski",
@@ -190,7 +191,17 @@
     "story_heading": "Dedemizin ismini taşıyan bir deniz kültürü",
     "story_p1": "\"Nonno\", İtalyanca'da dede demek. Mehmet Bey'in dedesi İzmir'de balıkçılık yapardı — denizi, teknenin her ayrıntısını, bir konuğa ikram etmenin inceliğini ondan öğrendik.",
     "story_p2": "2020'de pandeminin ortasında, yeni bir iş kurmak cesaret isteyen bir karardı. Bir katamaranla başladık. Bugün dört katamaranla — hepsi 2021 ve sonrası model, Lagoon ve Excess — Göcek ve D-Marin'den hareket ediyoruz. Ama filonun büyümesinden çok, her misafirimizin bir sonraki sezon geri dönmesi bizim için gurur verici.",
-    "story_p3": "Bugün Göcek Marina ve D-Marin'den hizmet veriyoruz. Bir aile işletmesi olmanın tüm sıcaklığı ve bir profesyonel filonun tüm standardıyla."
+    "story_p3": "Bugün Göcek Marina ve D-Marin'den hizmet veriyoruz. Bir aile işletmesi olmanın tüm sıcaklığı ve bir profesyonel filonun tüm standardıyla.",
+    "stat_fleet": "Katamaran",
+    "stat_model": "Model yılı",
+    "stat_guests": "Mutlu misafir",
+    "stat_experience": "Yıllık deneyim",
+    "value1_title": "Misafir odaklı",
+    "value1_desc": "Her sezon başı sizi tanır, tatilinizi birlikte planlarız. Standart checklist'lerden uzağız.",
+    "value2_title": "Teknik güvence",
+    "value2_desc": "Her çıkış öncesi 40 maddelik teknik kontrol. Sezon başı tam bakım.",
+    "value3_title": "Yerel bilgi",
+    "value3_desc": "Göcek'te doğduk, burada yaşıyoruz. Hangi koyun ne zaman boş olduğunu biliyoruz."
   },
   "contact": {
     "title": "İletişim",
@@ -278,7 +289,9 @@
     "error_guests": "Kişi sayısı gerekli.",
     "error_name": "Ad soyad gerekli.",
     "error_email": "E-posta gerekli.",
-    "error_phone": "Telefon gerekli."
+    "error_phone": "Telefon gerekli.",
+    "placeholder_name": "Adınız ve soyadınız",
+    "placeholder_notes": "Özel istekleriniz, sorularınız veya notlarınız…"
   },
   "account": {
     "title": "Hesabım",
@@ -397,7 +410,8 @@
     "cancel_policy": "İptal Politikası",
     "rental_contract": "Kiralama Sözleşmesi",
     "cookie_policy": "Çerez Politikası",
-    "copyright": "© 2026 NonnoBlue · Tüm hakları saklıdır."
+    "copyright": "© 2026 NonnoBlue · Tüm hakları saklıdır.",
+    "office_hours_text": "Hafta içi 09:00 – 17:00 · Pazar kapalı"
   },
   "common": {
     "loading": "Yükleniyor…",

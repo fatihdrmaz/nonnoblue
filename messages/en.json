@@ -119,6 +119,7 @@
     "show_filters": "Show Filters",
     "hide_filters": "Hide Filters",
     "boats_found": "boats found",
+    "recommended": "Recommended",
     "price_asc": "Price: low to high",
     "price_desc": "Price: high to low",
     "newest": "New → old",
@@ -274,7 +275,17 @@
     "story_heading": "A maritime culture bearing our grandfather's name",
     "story_p1": "\"Nonno\" means grandfather in Italian. Mehmet's grandfather was a fisherman in İzmir — we learned from him the sea, every detail of a boat, and the art of hospitality.",
     "story_p2": "In 2020, in the middle of the pandemic, starting a new business took courage. We started with one catamaran. Today we sail with four — all 2021 and later Lagoon and Excess models — departing from Göcek and D-Marin. But more than the growth of our fleet, we're most proud when a guest returns the next season.",
-    "story_p3": "Today we operate from Göcek Marina and D-Marin. With all the warmth of a family business and all the standards of a professional fleet."
+    "story_p3": "Today we operate from Göcek Marina and D-Marin. With all the warmth of a family business and all the standards of a professional fleet.",
+    "stat_fleet": "Catamarans",
+    "stat_model": "Model year",
+    "stat_guests": "Happy guests",
+    "stat_experience": "Years experience",
+    "value1_title": "Guest-focused",
+    "value1_desc": "We get to know you at the start of each season and plan your holiday together. No standard checklists.",
+    "value2_title": "Technical assurance",
+    "value2_desc": "A 40-point technical check before every departure. Full service at the start of each season.",
+    "value3_title": "Local knowledge",
+    "value3_desc": "We were born in Göcek and live here. We know which bay is free and when."
   },
   "contact": {
     "title": "Contact",
@@ -362,7 +373,9 @@
     "error_guests": "Number of guests is required.",
     "error_name": "Full name is required.",
     "error_email": "Email is required.",
-    "error_phone": "Phone is required."
+    "error_phone": "Phone is required.",
+    "placeholder_name": "Your first and last name",
+    "placeholder_notes": "Your special requests, questions or notes…"
   },
   "account": {
     "title": "My Account",
@@ -481,7 +494,8 @@
     "cancel_policy": "Cancellation Policy",
     "rental_contract": "Rental Agreement",
     "cookie_policy": "Cookie Policy",
-    "copyright": "© 2026 NonnoBlue · All rights reserved."
+    "copyright": "© 2026 NonnoBlue · All rights reserved.",
+    "office_hours_text": "Mon–Fri 09:00 – 17:00 · Sunday closed"
   },
   "common": {
     "loading": "Loading…",

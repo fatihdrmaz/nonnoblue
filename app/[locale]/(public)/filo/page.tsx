@@ -87,7 +87,7 @@ export default function FiloPage() {
   const [priceMax, setPriceMax] = useState(15000);
   const [marinas, setMarinas] = useState<Set<string>>(new Set());
   const [extras, setExtras] = useState<Set<string>>(new Set());
-  const [sort, setSort] = useState<'price-asc' | 'price-desc' | 'year'>('price-asc');
+  const [sort, setSort] = useState<'recommended' | 'price-asc' | 'price-desc' | 'year'>('recommended');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   useEffect(() => {
@@ -161,6 +161,7 @@ export default function FiloPage() {
     if (sort === 'price-asc') list = [...list].sort((a, b) => toCard(a).priceFrom - toCard(b).priceFrom);
     if (sort === 'price-desc') list = [...list].sort((a, b) => toCard(b).priceFrom - toCard(a).priceFrom);
     if (sort === 'year') list = [...list].sort((a, b) => b.year - a.year);
+    // 'recommended' keeps DB display_order as returned by Supabase
     return list.map(toCard);
   }, [dbBoats, useMock, type, pax, sort, priceMax, marinas, extras]);
 
@@ -345,6 +346,7 @@ export default function FiloPage() {
                   value={sort}
                   onChange={(e) => setSort(e.target.value as typeof sort)}
                 >
+                  <option value="recommended">{t('recommended')}</option>
                   <option value="price-asc">{t('price_asc')}</option>
                   <option value="price-desc">{t('price_desc')}</option>
                   <option value="year">{t('newest')}</option>
