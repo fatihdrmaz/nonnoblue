@@ -1,0 +1,224 @@
+{
+  "nav": {
+    "home": "Ana Sayfa",
+    "fleet": "Filo",
+    "routes": "Rotalar",
+    "about": "Hakkımızda",
+    "contact": "İletişim",
+    "login": "Giriş Yap",
+    "logout": "Çıkış",
+    "reservation": "Rezervasyon",
+    "account": "Hesabım",
+    "services": "Hizmetler",
+    "blog": "Blog",
+    "faq": "SSS",
+    "whatsapp": "WhatsApp"
+  },
+  "home": {
+    "hero_title": "Mavi Suyun Özgürlüğü",
+    "hero_subtitle": "Göcek'ten hareketle Türkiye'nin en güzel koylarını keşfedin",
+    "hero_cta": "Tekne Bul",
+    "fleet_title": "Filomuz",
+    "fleet_subtitle": "Özenle seçilmiş teknelerimizle unutulmaz bir deniz tatili yaşayın",
+    "routes_title": "Rotalarımız",
+    "routes_subtitle": "Göcek ve çevresindeki eşsiz koyları keşfedin",
+    "blog_title": "Blog",
+    "blog_subtitle": "Denizcilik ipuçları ve seyahat yazıları",
+    "stats_guests": "Mutlu Misafir",
+    "stats_routes": "Rota",
+    "stats_boats": "Tekne",
+    "stats_experience": "Yıllık Deneyim",
+    "view_all": "Tümünü Gör"
+  },
+  "fleet": {
+    "title": "Filomuz",
+    "subtitle": "Her ihtiyaca uygun tekne seçenekleri",
+    "cabin": "kabin",
+    "guest": "kişi",
+    "from": "den",
+    "per_week": "/ hafta",
+    "detail": "İncele",
+    "book": "Rezervasyon Yap",
+    "all": "Tümü",
+    "filter_type": "Tür",
+    "price_from": "Fiyat: "
+  },
+  "boat": {
+    "available": "Müsait",
+    "unavailable": "Dolu",
+    "optioned": "Opsiyonlu",
+    "book_now": "Rezervasyon Yap",
+    "weekly_price": "Haftalık Fiyat",
+    "cabins": "Kabin",
+    "guests": "Kişi",
+    "marina": "Marina",
+    "length": "Boy",
+    "year": "Yıl",
+    "select_week": "Hafta Seçin",
+    "pricing_calendar": "Haftalık Fiyat Takvimi",
+    "charter_type": "Charter Tipi",
+    "features": "Özellikler",
+    "gallery": "Galeri",
+    "full": "Dolu",
+    "option": "Opsiyon"
+  },
+  "routes": {
+    "title": "Rotalarımız",
+    "subtitle": "Göcek'ten hareketle keşfedebileceğiniz güzergahlar",
+    "highlights": "Öne Çıkanlar",
+    "duration": "Süre",
+    "difficulty": "Güçlük",
+    "view_detail": "Detay"
+  },
+  "about": {
+    "title": "Hakkımızda",
+    "subtitle": "NonnoBlue ailesi olarak denizin tutkunuyuz",
+    "team_title": "Ekibimiz",
+    "mission_title": "Misyonumuz",
+    "vision_title": "Vizyonumuz"
+  },
+  "contact": {
+    "title": "İletişim",
+    "subtitle": "Bizimle iletişime geçin",
+    "name": "Adınız",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "message": "Mesajınız",
+    "send": "Gönder",
+    "success": "Mesajınız iletildi, en kısa sürede dönüş yapacağız.",
+    "error": "Bir hata oluştu, lütfen tekrar deneyin.",
+    "address": "Adres",
+    "office": "Ofis"
+  },
+  "reservation": {
+    "title": "Rezervasyon",
+    "subtitle": "Hayalinizdeki tekne tatilini planlayın",
+    "boat": "Tekne",
+    "start_date": "Başlangıç Tarihi",
+    "end_date": "Bitiş Tarihi",
+    "guests": "Kişi Sayısı",
+    "name": "Ad Soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "notes": "Notlar / Özel İstekler",
+    "submit": "Rezervasyon Talebi Gönder",
+    "success_title": "Talebiniz Alındı!",
+    "success_text": "En kısa sürede sizinle iletişime geçeceğiz.",
+    "charter_type": "Charter Tipi",
+    "crewed": "Mürettebatlı",
+    "skippered": "Kaptanlı",
+    "bareboat": "Çıplak Tekne",
+    "select_boat": "Tekne seçin",
+    "select_charter": "Charter tipi seçin",
+    "captain_request": "Kaptan İstiyorum"
+  },
+  "account": {
+    "title": "Hesabım",
+    "my_bookings": "Rezervasyonlarım",
+    "no_bookings": "Henüz rezervasyonunuz bulunmuyor.",
+    "logout": "Çıkış Yap",
+    "profile": "Profil",
+    "booking_code": "Rezervasyon Kodu",
+    "make_reservation": "Rezervasyon Yap"
+  },
+  "booking": {
+    "title": "Rezervasyon Detayı",
+    "status": "Durum",
+    "dates": "Tarihler",
+    "guests": "Kişi Sayısı",
+    "total": "Toplam Tutar",
+    "deposit": "Depozit",
+    "paid": "Ödenen",
+    "cancel_policy": "30 gün önce ücretsiz iptal hakkınız bulunmaktadır.",
+    "contact_us": "İletişime Geç",
+    "back": "Hesabıma Dön",
+    "service_details": "Servis Detayları",
+    "boat_rental": "Tekne Kiralama",
+    "service_pack": "Servis Paketi",
+    "vat": "KDV",
+    "payment_status": "Ödeme Durumu",
+    "notes": "Notlar",
+    "route": "Rota",
+    "boat": "Tekne"
+  },
+  "auth": {
+    "login_title": "Giriş Yap",
+    "login_subtitle": "Magic link ile güvenli giriş",
+    "login_email": "E-posta adresiniz",
+    "login_submit": "Magic Link Gönder",
+    "magic_link_sent": "E-postanıza magic link gönderdik. Gelen kutunuzu kontrol edin.",
+    "register_title": "Kayıt Ol",
+    "back_to_login": "Girişe Dön",
+    "or": "veya",
+    "no_account": "Hesabınız yok mu?",
+    "have_account": "Zaten hesabınız var mı?"
+  },
+  "footer": {
+    "rights": "Tüm hakları saklıdır.",
+    "privacy": "Gizlilik",
+    "terms": "Kullanım Koşulları",
+    "kvkk": "KVKK",
+    "contact": "İletişim",
+    "about": "Hakkımızda",
+    "fleet": "Filo",
+    "routes": "Rotalar",
+    "faq": "SSS",
+    "careers": "Kariyer",
+    "tagline": "Göcek'ten dünyaya açılan kapınız"
+  },
+  "common": {
+    "loading": "Yükleniyor…",
+    "not_found": "Sayfa bulunamadı.",
+    "back": "Geri",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "search": "Ara",
+    "all": "Tümü",
+    "filter": "Filtrele",
+    "show_more": "Daha Fazla",
+    "close": "Kapat",
+    "confirm": "Onayla",
+    "yes": "Evet",
+    "no": "Hayır",
+    "week": "Hafta",
+    "night": "Gece",
+    "day": "Gün",
+    "person": "Kişi",
+    "per_week": "/ hafta"
+  },
+  "status": {
+    "pending": "Bekliyor",
+    "confirmed": "Onaylandı",
+    "completed": "Tamamlandı",
+    "cancelled": "İptal"
+  },
+  "sss": {
+    "title": "Sıkça Sorulan Sorular",
+    "subtitle": "Merak ettiklerinizin cevapları"
+  },
+  "services": {
+    "title": "Hizmetlerimiz",
+    "subtitle": "Size özel charter deneyimi"
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Denizcilik ipuçları ve seyahat yazıları",
+    "read_more": "Devamını Oku",
+    "published": "Yayın Tarihi"
+  },
+  "privacy": {
+    "title": "Gizlilik Politikası"
+  },
+  "terms": {
+    "title": "Kullanım Koşulları"
+  },
+  "kvkk": {
+    "title": "KVKK Aydınlatma Metni"
+  },
+  "careers": {
+    "title": "Kariyer",
+    "subtitle": "NonnoBlue ailesine katılın"
+  }
+}

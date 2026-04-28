@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useLocale } from 'next-intl';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { Logo } from './Logo';
 import { createClient } from '@/lib/supabase/client';
 
@@ -16,11 +16,17 @@ const navLinks = [
 ];
 
 export function Nav() {
+  const locale = useLocale();
+  const router = useRouter();
   const pathname = usePathname();
   const isHome = pathname === '/';
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  function switchLocale() {
+    router.replace(pathname, { locale: locale === 'tr' ? 'en' : 'tr' });
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -67,6 +73,22 @@ export function Nav() {
           </nav>
 
           <div className="nb-nav-actions">
+            <button
+              onClick={switchLocale}
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                padding: '4px 10px',
+                borderRadius: 99,
+                border: '1.5px solid currentColor',
+                background: 'transparent',
+                cursor: 'pointer',
+                letterSpacing: '0.05em',
+                color: transparent ? '#fff' : 'var(--ink)',
+              }}
+            >
+              {locale === 'tr' ? 'EN' : 'TR'}
+            </button>
             {isLoggedIn ? (
               <Link href="/hesabim" className="btn btn-sm" style={{
                 border: '1.5px solid rgba(255,255,255,0.5)',
@@ -168,6 +190,22 @@ export function Nav() {
               </svg>
               WhatsApp
             </a>
+            <button
+              onClick={() => { switchLocale(); setMenuOpen(false); }}
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                padding: '8px 16px',
+                borderRadius: 99,
+                border: '1.5px solid currentColor',
+                background: 'transparent',
+                cursor: 'pointer',
+                letterSpacing: '0.05em',
+                alignSelf: 'flex-start',
+              }}
+            >
+              {locale === 'tr' ? 'English' : 'Türkçe'}
+            </button>
             <Link href="/filo" className="btn btn-primary" onClick={() => setMenuOpen(false)}>
               Rezervasyon
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

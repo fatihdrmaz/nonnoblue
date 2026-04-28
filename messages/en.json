@@ -1,0 +1,224 @@
+{
+  "nav": {
+    "home": "Home",
+    "fleet": "Fleet",
+    "routes": "Routes",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Sign In",
+    "logout": "Sign Out",
+    "reservation": "Book Now",
+    "account": "My Account",
+    "services": "Services",
+    "blog": "Blog",
+    "faq": "FAQ",
+    "whatsapp": "WhatsApp"
+  },
+  "home": {
+    "hero_title": "Freedom of the Blue Waters",
+    "hero_subtitle": "Discover Turkey's most beautiful bays sailing from Göcek",
+    "hero_cta": "Find a Boat",
+    "fleet_title": "Our Fleet",
+    "fleet_subtitle": "Experience an unforgettable sea holiday aboard our carefully selected yachts",
+    "routes_title": "Our Routes",
+    "routes_subtitle": "Explore the unique bays around Göcek",
+    "blog_title": "Blog",
+    "blog_subtitle": "Sailing tips and travel stories",
+    "stats_guests": "Happy Guests",
+    "stats_routes": "Routes",
+    "stats_boats": "Boats",
+    "stats_experience": "Years Experience",
+    "view_all": "View All"
+  },
+  "fleet": {
+    "title": "Our Fleet",
+    "subtitle": "Boat options for every need",
+    "cabin": "cabin",
+    "guest": "guests",
+    "from": "from",
+    "per_week": "/ week",
+    "detail": "View Details",
+    "book": "Book Now",
+    "all": "All",
+    "filter_type": "Type",
+    "price_from": "From: "
+  },
+  "boat": {
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "optioned": "On Option",
+    "book_now": "Book Now",
+    "weekly_price": "Weekly Price",
+    "cabins": "Cabins",
+    "guests": "Guests",
+    "marina": "Marina",
+    "length": "Length",
+    "year": "Year",
+    "select_week": "Select Week",
+    "pricing_calendar": "Weekly Pricing Calendar",
+    "charter_type": "Charter Type",
+    "features": "Features",
+    "gallery": "Gallery",
+    "full": "Full",
+    "option": "Option"
+  },
+  "routes": {
+    "title": "Our Routes",
+    "subtitle": "Itineraries departing from Göcek",
+    "highlights": "Highlights",
+    "duration": "Duration",
+    "difficulty": "Difficulty",
+    "view_detail": "Details"
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "The NonnoBlue family is passionate about the sea",
+    "team_title": "Our Team",
+    "mission_title": "Our Mission",
+    "vision_title": "Our Vision"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Get in touch with us",
+    "name": "Your Name",
+    "email": "Email",
+    "phone": "Phone",
+    "message": "Your Message",
+    "send": "Send",
+    "success": "Your message has been sent. We'll get back to you shortly.",
+    "error": "An error occurred. Please try again.",
+    "address": "Address",
+    "office": "Office"
+  },
+  "reservation": {
+    "title": "Reservation",
+    "subtitle": "Plan your dream yacht holiday",
+    "boat": "Boat",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "guests": "Number of Guests",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "notes": "Notes / Special Requests",
+    "submit": "Send Reservation Request",
+    "success_title": "Request Received!",
+    "success_text": "We'll be in touch with you shortly.",
+    "charter_type": "Charter Type",
+    "crewed": "Crewed",
+    "skippered": "Skippered",
+    "bareboat": "Bareboat",
+    "select_boat": "Select a boat",
+    "select_charter": "Select charter type",
+    "captain_request": "I want a captain"
+  },
+  "account": {
+    "title": "My Account",
+    "my_bookings": "My Reservations",
+    "no_bookings": "You have no reservations yet.",
+    "logout": "Sign Out",
+    "profile": "Profile",
+    "booking_code": "Booking Code",
+    "make_reservation": "Make a Reservation"
+  },
+  "booking": {
+    "title": "Booking Detail",
+    "status": "Status",
+    "dates": "Dates",
+    "guests": "Guests",
+    "total": "Total Amount",
+    "deposit": "Deposit",
+    "paid": "Paid",
+    "cancel_policy": "Free cancellation available 30 days before the start date.",
+    "contact_us": "Contact Us",
+    "back": "Back to My Account",
+    "service_details": "Service Details",
+    "boat_rental": "Boat Rental",
+    "service_pack": "Service Pack",
+    "vat": "VAT",
+    "payment_status": "Payment Status",
+    "notes": "Notes",
+    "route": "Route",
+    "boat": "Boat"
+  },
+  "auth": {
+    "login_title": "Sign In",
+    "login_subtitle": "Secure login with magic link",
+    "login_email": "Your email address",
+    "login_submit": "Send Magic Link",
+    "magic_link_sent": "We've sent a magic link to your email. Please check your inbox.",
+    "register_title": "Register",
+    "back_to_login": "Back to Sign In",
+    "or": "or",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "privacy": "Privacy",
+    "terms": "Terms of Use",
+    "kvkk": "KVKK",
+    "contact": "Contact",
+    "about": "About",
+    "fleet": "Fleet",
+    "routes": "Routes",
+    "faq": "FAQ",
+    "careers": "Careers",
+    "tagline": "Your gateway to the sea from Göcek"
+  },
+  "common": {
+    "loading": "Loading…",
+    "not_found": "Page not found.",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "all": "All",
+    "filter": "Filter",
+    "show_more": "Show More",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "week": "Week",
+    "night": "Night",
+    "day": "Day",
+    "person": "Person",
+    "per_week": "/ week"
+  },
+  "status": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "sss": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Answers to your questions"
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Custom charter experience for you"
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Sailing tips and travel stories",
+    "read_more": "Read More",
+    "published": "Published"
+  },
+  "privacy": {
+    "title": "Privacy Policy"
+  },
+  "terms": {
+    "title": "Terms of Use"
+  },
+  "kvkk": {
+    "title": "KVKK Privacy Notice"
+  },
+  "careers": {
+    "title": "Careers",
+    "subtitle": "Join the NonnoBlue family"
+  }
+}

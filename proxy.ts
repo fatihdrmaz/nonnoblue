@@ -1,18 +1,38 @@
+import createMiddleware from 'next-intl/middleware';
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { routing } from './i18n/routing';
+
+const intlMiddleware = createMiddleware(routing);
 
 const PROTECTED = ['/admin', '/hesabim'];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Public routes → proxy'i atla, Supabase çağrısı yapma
-  const needsAuth = PROTECTED.some((p) => pathname.startsWith(p));
-  if (!needsAuth) {
+  // Skip API, admin, _next, static files
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/_vercel') ||
+    pathname.match(/\.(.+)$/)
+  ) {
     return NextResponse.next({ request });
   }
 
-  const response = NextResponse.next({ request });
+  // Run next-intl middleware first
+  const intlResponse = intlMiddleware(request);
+
+  // Determine the locale-stripped pathname for auth checks
+  const strippedPathname = pathname.replace(/^\/(en|tr)/, '') || '/';
+  const needsAuth = PROTECTED.some((p) => strippedPathname.startsWith(p));
+
+  if (!needsAuth) {
+    return intlResponse;
+  }
+
+  // Auth check for protected routes
+  const response = intlResponse ?? NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,8 +51,8 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // /admin/* → giriş yapmamışsa /giris'e yönlendir
-  if (pathname.startsWith('/admin')) {
+  // /admin/* → redirect to /giris if not logged in
+  if (strippedPathname.startsWith('/admin')) {
     if (!user) {
       return NextResponse.redirect(new URL('/giris', request.url));
     }
@@ -48,8 +68,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // /hesabim/* → giriş yapmamışsa /giris'e yönlendir
-  if (pathname.startsWith('/hesabim')) {
+  // /hesabim/* → redirect to /giris if not logged in
+  if (strippedPathname.startsWith('/hesabim')) {
     if (!user) {
       return NextResponse.redirect(new URL('/giris', request.url));
     }
@@ -59,5 +79,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|admin|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 };
