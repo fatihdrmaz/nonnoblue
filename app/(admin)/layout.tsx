@@ -3,213 +3,121 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Logo } from '@/components/Logo'
 
 const NAV_ITEMS = [
-  { icon: '📊', label: 'Dashboard', href: '/admin' },
-  { icon: '🚢', label: 'Filo', href: '/admin/filo' },
-  { icon: '📅', label: 'Takvim', href: '/admin/takvim' },
-  { icon: '📋', label: 'Rezervasyonlar', href: '/admin/rezervasyonlar' },
-  { icon: '👥', label: 'Müşteriler', href: '/admin/musteriler' },
-  { icon: '🗺️', label: 'Rotalar', href: '/admin/rotalar' },
-  { icon: '📝', label: 'Blog', href: '/admin/blog' },
-  { icon: '⚙️', label: 'Ayarlar', href: '/admin/ayarlar' },
+  { k: 'dashboard',      l: 'Dashboard',          href: '/admin' },
+  { k: 'calendar',       l: 'Takvim & müsaitlik', href: '/admin/takvim' },
+  { k: 'reservations',   l: 'Rezervasyonlar',     href: '/admin/rezervasyonlar' },
+  { k: 'fleet',          l: 'Filo yönetimi',      href: '/admin/filo' },
+  { k: 'customers',      l: 'Müşteriler',         href: '/admin/musteriler' },
+  { k: 'routes',         l: 'Rotalar',            href: '/admin/rotalar' },
+  { k: 'team',           l: 'Ekip',               href: '/admin/ekip' },
+  { k: 'blog',           l: 'Blog',               href: '/admin/blog' },
+  { k: 'mail',           l: 'Mail şablonları',    href: '/admin/mail' },
+  { k: 'settings',       l: 'Ayarlar',            href: '/admin/ayarlar' },
 ]
-
-const PAGE_TITLES: Record<string, string> = {
-  '/admin': 'Dashboard',
-  '/admin/filo': 'Filo Yönetimi',
-  '/admin/takvim': 'Rezervasyon Takvimi',
-  '/admin/rezervasyonlar': 'Rezervasyonlar',
-  '/admin/musteriler': 'Müşteriler',
-  '/admin/rotalar': 'Rota Yönetimi',
-  '/admin/blog': 'Blog Yönetimi',
-  '/admin/ayarlar': 'Ayarlar',
-}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const pageTitle = PAGE_TITLES[pathname] ?? 'Admin'
+  const router = useRouter()
+  const [adminName, setAdminName] = useState('')
+  const [adminEmail, setAdminEmail] = useState('')
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      setAdminEmail(user.email ?? '')
+      supabase.from('profiles').select('full_name').eq('id', user.id).single()
+        .then(({ data }) => setAdminName(data?.full_name || user.email?.split('@')[0] || 'Admin'))
+    })
+  }, [])
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.replace('/')
+  }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.4)',
-            zIndex: 40,
-            display: 'none',
-          }}
-        />
-      )}
+    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', minHeight: '100vh', background: 'var(--bg)' }}>
 
       {/* Sidebar */}
-      <aside
-        style={{
-          width: sidebarOpen ? 240 : 0,
-          minWidth: sidebarOpen ? 240 : 0,
-          background: 'var(--deep, #0b2540)',
-          color: '#fff',
-          height: '100vh',
-          position: 'sticky',
-          top: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          transition: 'width 0.2s, min-width 0.2s',
-          zIndex: 50,
-          flexShrink: 0,
-        }}
-      >
+      <aside style={{
+        background: 'var(--deep-2)',
+        color: '#fff',
+        padding: '24px 0',
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
         {/* Logo */}
-        <div style={{
-          padding: '28px 24px 20px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-        }}>
-          <span style={{
-            fontFamily: 'Georgia, serif',
-            fontSize: 22,
-            fontWeight: 700,
-            color: 'var(--teal, #0d9488)',
-            letterSpacing: '-0.3px',
-            whiteSpace: 'nowrap',
-          }}>
-            NB Admin
-          </span>
+        <div style={{ padding: '0 24px 20px', borderBottom: '1px solid rgba(255,255,255,.08)', marginBottom: 4 }}>
+          <Logo invert height={28} />
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', marginTop: 6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Admin Panel
+          </div>
         </div>
 
         {/* Nav */}
-        <nav style={{
-          flex: 1,
-          padding: '16px 12px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 4,
-        }}>
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href
+        <nav style={{ flex: 1, padding: '16px 12px' }}>
+          {NAV_ITEMS.map(it => {
+            const isActive = it.href === '/admin' ? pathname === '/admin' : pathname.startsWith(it.href)
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  textDecoration: 'none',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,0.65)',
-                  background: isActive ? 'var(--teal, #0d9488)' : 'transparent',
-                  fontWeight: isActive ? 600 : 400,
-                  fontSize: 14,
-                  whiteSpace: 'nowrap',
-                  transition: 'background 0.15s, color 0.15s',
-                }}
-              >
-                <span style={{ fontSize: 16 }}>{item.icon}</span>
-                {item.label}
+              <Link key={it.href} href={it.href} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '11px 14px', borderRadius: 8, textDecoration: 'none',
+                background: isActive ? 'rgba(255,255,255,.1)' : 'transparent',
+                color: isActive ? '#fff' : 'rgba(255,255,255,.7)',
+                fontSize: 13.5, fontWeight: isActive ? 600 : 500,
+                marginBottom: 2, transition: 'background 0.15s',
+              }}>
+                {it.l}
               </Link>
             )
           })}
         </nav>
 
-        {/* Footer */}
-        <div style={{ padding: '16px 12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <Link
-            href="/"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '10px 12px',
-              borderRadius: 8,
-              textDecoration: 'none',
-              color: 'rgba(255,255,255,0.5)',
-              fontSize: 13,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <span>←</span>
-            Siteye Dön
-          </Link>
+        {/* User + Signout */}
+        <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: '50%', background: 'var(--teal)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0,
+            }}>
+              {(adminName || 'A')[0].toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {adminName}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                Operasyon yöneticisi
+              </div>
+            </div>
+          </div>
+          <button onClick={handleSignOut} style={{
+            width: '100%', padding: '8px 0', border: '1px solid rgba(255,255,255,.15)',
+            background: 'transparent', color: 'rgba(255,255,255,.7)',
+            borderRadius: 8, fontSize: 12, cursor: 'pointer',
+          }}>
+            Çıkış yap
+          </button>
         </div>
       </aside>
 
       {/* Main */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'var(--bg, #f4f6f8)',
-        overflowY: 'auto',
-        minWidth: 0,
-      }}>
-        {/* Top bar */}
-        <header style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 24px',
-          height: 60,
-          background: 'var(--card, #fff)',
-          borderBottom: '1px solid var(--line, #e5e7eb)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 30,
-          flexShrink: 0,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{
-                background: 'none',
-                border: '1px solid var(--line, #e5e7eb)',
-                borderRadius: 6,
-                padding: '6px 8px',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 4,
-              }}
-              aria-label="Sidebar toggle"
-            >
-              <span style={{ display: 'block', width: 18, height: 2, background: 'var(--ink, #1e293b)', borderRadius: 2 }} />
-              <span style={{ display: 'block', width: 18, height: 2, background: 'var(--ink, #1e293b)', borderRadius: 2 }} />
-              <span style={{ display: 'block', width: 18, height: 2, background: 'var(--ink, #1e293b)', borderRadius: 2 }} />
-            </button>
-            <h1 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: 'var(--ink, #1e293b)' }}>
-              {pageTitle}
-            </h1>
-          </div>
-
-          <div style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            background: 'var(--teal, #0d9488)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 700,
-            fontSize: 14,
-            cursor: 'pointer',
-          }}>
-            A
-          </div>
-        </header>
-
-        <main style={{ flex: 1, padding: 24 }}>
-          {children}
-        </main>
-      </div>
+      <main style={{ padding: '32px 40px', overflowX: 'hidden', minWidth: 0 }}>
+        {children}
+      </main>
     </div>
   )
 }

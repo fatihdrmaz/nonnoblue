@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { ROUTES } from '@/data/mock';
 
 interface Route {
   id: string;
@@ -13,9 +14,24 @@ interface Route {
   description: string;
   highlights: string[];
   img_url: string;
-  active: boolean;
-  display_order: number;
-  created_at: string;
+}
+
+function toPublicUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `https://eieshihgnevszcsaziyn.supabase.co/storage/v1/object/public/route-photos/${path}`;
+}
+
+function normalizeMockRoute(r: typeof ROUTES[0]): Route {
+  return {
+    id: r.id,
+    title: r.title,
+    days: r.days,
+    difficulty: r.difficulty,
+    description: r.desc,
+    highlights: r.highlights,
+    img_url: r.img,
+  };
 }
 
 export default function RotalarPage() {
@@ -26,11 +42,15 @@ export default function RotalarPage() {
     const supabase = createClient();
     supabase
       .from('routes')
-      .select('*')
+      .select('id,title,days,difficulty,description,highlights,img_url')
       .eq('active', true)
       .order('display_order', { ascending: true })
       .then(({ data }) => {
-        setRoutes(data ?? []);
+        if (data && data.length > 0) {
+          setRoutes(data as Route[]);
+        } else {
+          setRoutes(ROUTES.map(normalizeMockRoute));
+        }
         setLoading(false);
       });
   }, []);
@@ -50,7 +70,7 @@ export default function RotalarPage() {
             Ege ve Akdeniz&apos;in<br />En Güzel Rotaları
           </h1>
           <p style={{ fontSize: 18, opacity: 0.8, maxWidth: 560, lineHeight: 1.7 }}>
-            Göcek&apos;ten Atina&apos;ya uzanan mavinin binbir tonu — her rota kendi hikayesini taşıyor.
+            Göcek&apos;ten uzanan mavinin binbir tonu — her rota kendi hikayesini taşıyor.
           </p>
         </div>
       </div>
@@ -100,13 +120,13 @@ export default function RotalarPage() {
 function RouteCard({ route }: { route: Route }) {
   return (
     <Link href={`/rotalar/${route.id}`} className="nb-route">
-      <Image
-        src={route.img_url}
+      {route.img_url && <Image
+        src={toPublicUrl(route.img_url)}
         alt={route.title}
         fill
         style={{ objectFit: 'cover' }}
         sizes="(max-width: 800px) 100vw, 50vw"
-      />
+      />}
       <div className="nb-route-body">
         <div className="nb-route-chips">
           <span>{route.days} gün</span>

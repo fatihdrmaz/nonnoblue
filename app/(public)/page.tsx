@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { NB_DATA } from '@/data/mock';
+import { createClient } from '@/lib/supabase/client';
 import { BoatCard } from '@/components/BoatCard';
 import { SectionTitle } from '@/components/SectionTitle';
 
@@ -134,18 +135,49 @@ function StatsStrip() {
 // ─── FLEET ────────────────────────────────────────────────────────────────────
 
 function FleetSection() {
-  const boats = (NB_DATA.boats ?? []).slice(0, 4).map((b: any) => ({
-    id: b.id,
-    name: b.name,
-    type: b.type,
-    ribbon: b.ribbon,
-    cabins: b.cabins,
-    maxPax: b.maxPax,
-    marina: b.marina,
-    badge: b.badge ?? null,
-    img: b.img,
-    priceFrom: b.priceFrom,
-  }));
+  const [boats, setBoats] = useState<any[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('boats')
+      .select('id,slug,name,type,cabins,max_guests,marina,boat_photos(storage_path,position),boat_pricing(weekly_price_eur)')
+      .eq('active', true)
+      .order('display_order')
+      .limit(4)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setBoats(data.map((b: any) => {
+            const sorted = [...(b.boat_photos ?? [])].sort((a: any, c: any) => a.position - c.position);
+            const prices = (b.boat_pricing ?? []).map((p: any) => p.weekly_price_eur);
+            const rawPath = sorted[0]?.storage_path ?? '';
+            const publicUrl = rawPath
+              ? rawPath.startsWith('http')
+                ? rawPath
+                : supabase.storage.from('boat-photos').getPublicUrl(rawPath).data.publicUrl
+              : '';
+            return {
+              id: b.slug,
+              name: b.name,
+              type: b.type,
+              ribbon: null,
+              cabins: b.cabins,
+              maxPax: b.max_guests,
+              marina: b.marina,
+              badge: null,
+              img: publicUrl || '/images/hero/lagoon42-bay.jpg',
+              priceFrom: prices.length ? Math.min(...prices) : 0,
+            };
+          }));
+        } else {
+          setBoats((NB_DATA.boats ?? []).slice(0, 4).map((b: any) => ({
+            id: b.id, name: b.name, type: b.type, ribbon: b.ribbon,
+            cabins: b.cabins, maxPax: b.maxPax, marina: b.marina,
+            badge: b.badge ?? null, img: b.img, priceFrom: b.priceFrom,
+          })));
+        }
+      });
+  }, []);
 
   return (
     <section className="nb-section">
@@ -224,7 +256,24 @@ function WhyUsSection() {
 // ─── ROUTES ───────────────────────────────────────────────────────────────────
 
 function RoutesSection() {
-  const routes = (NB_DATA.routes ?? []).slice(0, 4);
+  const [routes, setRoutes] = useState<any[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('routes')
+      .select('id,title,days,difficulty,description,highlights,img_url')
+      .eq('active', true)
+      .order('display_order')
+      .limit(4)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setRoutes(data.map((r: any) => ({ ...r, img: r.img_url, desc: r.description })));
+        } else {
+          setRoutes((NB_DATA.routes ?? []).slice(0, 4));
+        }
+      });
+  }, []);
 
   return (
     <section className="nb-section">
@@ -404,7 +453,24 @@ function CtaBand() {
 // ─── BLOG TEASER ──────────────────────────────────────────────────────────────
 
 function BlogTeaserSection() {
-  const posts = (NB_DATA.blog ?? []).slice(0, 3);
+  const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('blog_posts')
+      .select('id,slug,title,excerpt,img_url,category,published_at')
+      .eq('published', true)
+      .order('published_at', { ascending: false })
+      .limit(3)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setPosts(data.map((p: any) => ({ ...p, img: p.img_url, date: p.published_at?.split('T')[0] ?? '', cat: p.category })));
+        } else {
+          setPosts((NB_DATA.blog ?? []).slice(0, 3));
+        }
+      });
+  }, []);
 
   return (
     <section className="nb-section">

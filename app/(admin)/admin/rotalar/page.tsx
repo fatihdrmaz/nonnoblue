@@ -190,11 +190,20 @@ const DIFFICULTY_COLORS: Record<string, { bg: string; color: string }> = {
   'Zor': { bg: '#fee2e2', color: '#b91c1c' },
 }
 
+const SUPABASE_STORAGE = 'https://eieshihgnevszcsaziyn.supabase.co/storage/v1/object/public/route-photos'
+
+function toPublicUrl(path: string): string {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `${SUPABASE_STORAGE}/${path}`
+}
+
 export default function AdminRotalarPage() {
   const supabase = createClient()
   const [routes, setRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<'list' | 'edit' | 'add'>('list')
   const [selected, setSelected] = useState<Route | null>(null)
@@ -279,6 +288,20 @@ export default function AdminRotalarPage() {
 
   function set(field: keyof FormData, value: string | number | boolean) {
     setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setError(null)
+    const ext = file.name.split('.').pop()
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error: upErr } = await supabase.storage.from('route-photos').upload(path, file, { cacheControl: '3600', upsert: false })
+    if (upErr) { setError(upErr.message); setUploading(false); return }
+    const { data } = supabase.storage.from('route-photos').getPublicUrl(path)
+    set('img_url', data.publicUrl)
+    setUploading(false)
   }
 
   // ── LIST ──
@@ -462,18 +485,45 @@ export default function AdminRotalarPage() {
 
         <div style={{ ...S.card, padding: 24 }}>
           <p style={S.sectionTitle}>Görsel</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px', alignItems: 'start' }}>
-            <Field label="Görsel URL">
-              <input style={S.input} value={form.img_url} onChange={e => set('img_url', e.target.value)} placeholder="https://..." />
-            </Field>
-            {form.img_url && (
+          <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            {/* Preview */}
+            <div style={{ position: 'relative', width: 180, height: 120, borderRadius: 10, overflow: 'hidden', border: '1.5px dashed var(--line, #e5e7eb)', background: 'var(--foam)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {form.img_url ? (
+                <Image src={toPublicUrl(form.img_url)} alt="preview" fill style={{ objectFit: 'cover' }} sizes="180px" />
+              ) : (
+                <span style={{ fontSize: 32 }}>🗺️</span>
+              )}
+            </div>
+            {/* Upload + URL */}
+            <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={S.label}>Önizleme</label>
-                <div style={{ position: 'relative', width: 120, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line, #e5e7eb)' }}>
-                  <Image src={form.img_url} alt="preview" fill style={{ objectFit: 'cover' }} sizes="120px" />
-                </div>
+                <label style={S.label}>Dosyadan Yükle</label>
+                <label style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8, cursor: uploading ? 'wait' : 'pointer',
+                  background: 'var(--teal, #0d9488)', color: '#fff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600,
+                  opacity: uploading ? 0.7 : 1,
+                }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                  </svg>
+                  {uploading ? 'Yükleniyor…' : 'Fotoğraf Seç'}
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoUpload} disabled={uploading} />
+                </label>
               </div>
-            )}
+              <div>
+                <label style={S.label}>veya URL Gir</label>
+                <input style={S.input} value={form.img_url} onChange={e => set('img_url', e.target.value)} placeholder="https://..." />
+              </div>
+              {form.img_url && (
+                <button
+                  style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: '#ef4444', fontSize: 12, cursor: 'pointer', padding: 0, fontWeight: 600 }}
+                  onClick={() => set('img_url', '')}
+                >
+                  Görseli Kaldır
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

@@ -20,18 +20,25 @@ interface BoatCardProps {
   className?: string;
 }
 
+function toPublicUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `https://eieshihgnevszcsaziyn.supabase.co/storage/v1/object/public/boat-photos/${path}`;
+}
+
 export function BoatCard({ boat, className }: BoatCardProps) {
+  const imgSrc = toPublicUrl(boat.img);
   return (
     <Link href={`/filo/${boat.id}`} className={cn("nb-boat-card group block", className)}>
       <div className="nb-boat-img">
-        <Image
-          src={boat.img}
+        {imgSrc && <Image
+          src={imgSrc}
           alt={boat.name}
           fill
           style={{ objectFit: 'cover' }}
           className="transition-transform duration-700 group-hover:scale-[1.06]"
           sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
-        />
+        />}
         {boat.badge && <span className="nb-boat-badge">{boat.badge}</span>}
         <button
           className="nb-boat-heart"

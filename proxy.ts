@@ -1,7 +1,17 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const PROTECTED = ['/admin', '/hesabim'];
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Public routes → proxy'i atla, Supabase çağrısı yapma
+  const needsAuth = PROTECTED.some((p) => pathname.startsWith(p));
+  if (!needsAuth) {
+    return NextResponse.next({ request });
+  }
+
   const response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -22,12 +32,11 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // /admin/* → giriş yapmamışsa /giris'e yönlendir
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin')) {
     if (!user) {
       return NextResponse.redirect(new URL('/giris', request.url));
     }
 
-    // Giriş yapmış ama role admin değilse ana sayfaya yönlendir
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -40,7 +49,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // /hesabim/* → giriş yapmamışsa /giris'e yönlendir
-  if (request.nextUrl.pathname.startsWith('/hesabim')) {
+  if (pathname.startsWith('/hesabim')) {
     if (!user) {
       return NextResponse.redirect(new URL('/giris', request.url));
     }

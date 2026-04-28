@@ -1,7 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { BRAND } from '@/data/mock'
+
+const BRAND = {
+  name: 'NonnoBlue',
+  email: 'ahoy@nonnoblue.com',
+  phone: '+90 252 645 18 XX',
+  address: 'D-Marin Göcek, Muğla, Türkiye',
+}
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div style={{

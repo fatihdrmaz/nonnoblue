@@ -67,10 +67,7 @@ export function Footer() {
       </div>
 
       <div className="container nb-footer-bot">
-        <span>
-          <Link href="/admin" style={{ cursor: 'pointer', userSelect: 'none', opacity: 0.55, transition: 'opacity .2s' }}>©</Link>
-          {' '}2026 NonnoBlue · Tüm hakları saklıdır.
-        </span>
+        <span>© 2026 NonnoBlue · Tüm hakları saklıdır.</span>
         <span>Göcek · Fethiye · Muğla</span>
       </div>
     </footer>

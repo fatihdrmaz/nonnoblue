@@ -1,167 +1,222 @@
 'use client'
 
-import { BOATS } from '@/data/mock'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
-const MOCK_RESERVATIONS = [
-  { id: 1, code: 'NB-2025-001', guest: 'Elif Demir', email: 'elif@ex.com', boat: 'Ivan Nonno', route: 'Göcek – Fethiye', start: '12.07.2025', end: '19.07.2025', pax: 4, status: 'tamamlandı', total: 8400, paid: true },
-  { id: 2, code: 'NB-2025-002', guest: 'Marco Rossi', email: 'marco@ex.com', boat: 'Carmelina', route: 'Bodrum – Datça', start: '05.08.2025', end: '12.08.2025', pax: 6, status: 'onaylandı', total: 11200, paid: true },
-  { id: 3, code: 'NB-2026-001', guest: 'Thomas Weber', email: 'thomas@ex.com', boat: 'Rena', route: 'Marmaris Turu', start: '14.06.2026', end: '21.06.2026', pax: 4, status: 'bekliyor', total: 7800, paid: false },
-  { id: 4, code: 'NB-2026-002', guest: 'Aylin Yılmaz', email: 'aylin@ex.com', boat: 'Ayza 1', route: 'Fethiye – Kaş', start: '02.07.2026', end: '09.07.2026', pax: 8, status: 'bekliyor', total: 14600, paid: false },
-]
-
-const BOAT_STATUS: Record<string, boolean> = {
-  'Ivan Nonno': false,
-  'Ayza 1': true,
-  'Rena': true,
-  'Carmelina': true,
+type Stats = {
+  totalRevenue: number
+  activeBookings: number
+  pendingPayments: number
+  pendingCount: number
 }
 
-const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
-  tamamlandı: { bg: '#dcfce7', color: '#166534' },
-  onaylandı: { bg: '#dbeafe', color: '#1e40af' },
-  bekliyor: { bg: '#fef9c3', color: '#854d0e' },
-  iptal: { bg: '#fee2e2', color: '#991b1b' },
+type BoatOccupancy = {
+  name: string
+  bookings: number
+  revenue: number
 }
 
-const STATS = [
-  { label: 'Toplam Rezervasyon', value: '4', icon: '📋', bg: 'var(--teal, #0d9488)', color: '#fff' },
-  { label: 'Bu Ay Gelir', value: '₺42.000', icon: '💰', bg: 'var(--deep, #0b2540)', color: '#fff' },
-  { label: 'Aktif Tekne', value: String(BOATS.length), icon: '🚢', bg: 'var(--foam, #e0f2fe)', color: 'var(--deep, #0b2540)' },
-  { label: 'Bekleyen', value: '2', icon: '⏳', bg: '#fef9c3', color: '#854d0e' },
-]
+type RecentBooking = {
+  code: string
+  guest: string
+  boat: string
+  start_date: string
+  status: string
+  total_amount: number
+}
+
+const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
+  pending:   { label: 'Bekliyor',  color: '#92400e', bg: 'rgba(245,158,11,.12)' },
+  confirmed: { label: 'Onaylı',   color: '#065f46', bg: 'rgba(16,185,129,.12)' },
+  completed: { label: 'Tamamlandı', color: 'var(--muted)', bg: 'var(--foam)' },
+  cancelled: { label: 'İptal',    color: '#991b1b', bg: 'rgba(239,68,68,.12)' },
+}
+
+function StatCard({ label, value, delta, deltaUp, icon }: { label: string; value: string; delta?: string; deltaUp?: boolean; icon: string }) {
+  return (
+    <div style={{ background: 'var(--card)', padding: 22, borderRadius: 'var(--radius)', border: '1px solid var(--line)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+        <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+        <div style={{ width: 32, height: 32, background: 'var(--foam)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--teal)', fontSize: 16 }}>
+          {icon}
+        </div>
+      </div>
+      <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--ink)', marginBottom: 4 }}>{value}</div>
+      {delta && <div style={{ fontSize: 12, color: deltaUp ? '#10b981' : '#ef4444' }}>{deltaUp ? '↑' : '↓'} {delta}</div>}
+    </div>
+  )
+}
 
 export default function AdminDashboardPage() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+  const [stats, setStats] = useState<Stats>({ totalRevenue: 0, activeBookings: 0, pendingPayments: 0, pendingCount: 0 })
+  const [boatOccupancy, setBoatOccupancy] = useState<BoatOccupancy[]>([])
+  const [recent, setRecent] = useState<RecentBooking[]>([])
+  const [loading, setLoading] = useState(true)
+  const [adminName, setAdminName] = useState('Admin')
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
-        {STATS.map((s) => (
-          <div key={s.label} style={{
-            background: s.bg,
-            color: s.color,
-            borderRadius: 12,
-            padding: '20px 24px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 6,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-          }}>
-            <span style={{ fontSize: 24 }}>{s.icon}</span>
-            <span style={{ fontSize: 28, fontWeight: 700, lineHeight: 1 }}>{s.value}</span>
-            <span style={{ fontSize: 13, opacity: 0.85 }}>{s.label}</span>
-          </div>
-        ))}
+  useEffect(() => {
+    const supabase = createClient()
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: prof } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+        setAdminName(prof?.full_name || user.email?.split('@')[0] || 'Admin')
+      }
+
+      const [{ data: bookings }, { data: boats }] = await Promise.all([
+        supabase.from('bookings').select('code,status,total_amount,deposit_amount,balance_amount,start_date,guest_count,user_id,boat_id,boats(name),profiles(full_name,email)'),
+        supabase.from('boats').select('id,name').eq('active', true),
+      ])
+
+      if (bookings) {
+        const active = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending')
+        const pending = bookings.filter(b => b.status === 'pending')
+        const totalRev = bookings.filter(b => b.status !== 'cancelled').reduce((s, b) => s + (b.total_amount || 0), 0)
+        const pendingPay = pending.reduce((s, b) => s + (b.deposit_amount || 0), 0)
+
+        setStats({
+          totalRevenue: totalRev,
+          activeBookings: active.length,
+          pendingPayments: pendingPay,
+          pendingCount: pending.length,
+        })
+
+        // Boat occupancy
+        if (boats) {
+          const occ: BoatOccupancy[] = boats.map(boat => {
+            const bkgs = bookings.filter(b => b.boat_id === boat.id && b.status !== 'cancelled')
+            return {
+              name: boat.name,
+              bookings: bkgs.length,
+              revenue: bkgs.reduce((s, b) => s + (b.total_amount || 0), 0),
+            }
+          }).sort((a, b) => b.revenue - a.revenue)
+          setBoatOccupancy(occ)
+        }
+
+        // Recent bookings
+        const recentList: RecentBooking[] = bookings.slice(0, 5).map(b => ({
+          code: b.code,
+          guest: (b.profiles as { full_name?: string; email?: string } | null)?.full_name || (b.profiles as { full_name?: string; email?: string } | null)?.email || '—',
+          boat: (b.boats as { name?: string } | null)?.name || '—',
+          start_date: b.start_date,
+          status: b.status,
+          total_amount: b.total_amount,
+        }))
+        setRecent(recentList)
+      }
+
+      setLoading(false)
+    })()
+  }, [])
+
+  const today = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const maxRev = Math.max(...boatOccupancy.map(b => b.revenue), 1)
+
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28 }}>
+        <div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)' }}>Dashboard</h1>
+          <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>{today} · Hoş geldin {adminName}</p>
+        </div>
       </div>
 
-      {/* Two columns */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24 }}>
+      {/* Stat Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
+        <StatCard label="Sezon cirosu" value={loading ? '…' : `€${stats.totalRevenue.toLocaleString('tr-TR')}`} icon="⚓" />
+        <StatCard label="Aktif rezervasyon" value={loading ? '…' : String(stats.activeBookings)} icon="📅" />
+        <StatCard label="Bekleyen rezervasyon" value={loading ? '…' : String(stats.pendingCount)} icon="⏳" />
+        <StatCard label="Bekleyen ödeme" value={loading ? '…' : `€${stats.pendingPayments.toLocaleString('tr-TR')}`} icon="✉" />
+      </div>
 
-        {/* Son Rezervasyonlar */}
-        <div style={{
-          background: 'var(--card, #fff)',
-          borderRadius: 12,
-          border: '1px solid var(--line, #e5e7eb)',
-          overflow: 'hidden',
-        }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line, #e5e7eb)' }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--ink, #1e293b)' }}>
-              Son Rezervasyonlar
-            </h2>
+      {/* 2-col */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 28 }}>
+        {/* Boat occupancy */}
+        <div style={{ background: 'var(--card)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--line)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>Tekne bazında ciro</h3>
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>2026 sezonu</span>
           </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: 'var(--bg, #f4f6f8)' }}>
-                  {['Kod', 'Misafir', 'Tekne', 'Tarih', 'Durum', 'Tutar'].map((h) => (
-                    <th key={h} style={{
-                      padding: '10px 16px',
-                      textAlign: 'left',
-                      fontWeight: 600,
-                      color: 'var(--deep, #0b2540)',
-                      whiteSpace: 'nowrap',
-                    }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {MOCK_RESERVATIONS.map((r, i) => {
-                  const st = STATUS_STYLES[r.status] ?? { bg: '#f3f4f6', color: '#374151' }
-                  return (
-                    <tr key={r.id} style={{ borderTop: '1px solid var(--line, #e5e7eb)', background: i % 2 === 0 ? '#fff' : 'var(--bg, #f9fafb)' }}>
-                      <td style={{ padding: '10px 16px', fontWeight: 600, color: 'var(--teal, #0d9488)', whiteSpace: 'nowrap' }}>{r.code}</td>
-                      <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>{r.guest}</td>
-                      <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>{r.boat}</td>
-                      <td style={{ padding: '10px 16px', color: '#64748b', whiteSpace: 'nowrap' }}>{r.start}</td>
-                      <td style={{ padding: '10px 16px' }}>
-                        <span style={{
-                          background: st.bg,
-                          color: st.color,
-                          padding: '3px 10px',
-                          borderRadius: 20,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          whiteSpace: 'nowrap',
-                        }}>{r.status}</span>
-                      </td>
-                      <td style={{ padding: '10px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                        ₺{r.total.toLocaleString('tr-TR')}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Filo Durumu */}
-        <div style={{
-          background: 'var(--card, #fff)',
-          borderRadius: 12,
-          border: '1px solid var(--line, #e5e7eb)',
-          overflow: 'hidden',
-          alignSelf: 'start',
-        }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line, #e5e7eb)' }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--ink, #1e293b)' }}>
-              Filo Durumu
-            </h2>
-          </div>
-          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {BOATS.map((b) => {
-              const available = BOAT_STATUS[b.name] ?? true
+          {loading ? (
+            <p style={{ color: 'var(--muted)', fontSize: 14 }}>Yükleniyor…</p>
+          ) : boatOccupancy.length === 0 ? (
+            <p style={{ color: 'var(--muted)', fontSize: 14 }}>Henüz veri yok.</p>
+          ) : (
+            boatOccupancy.map(b => {
+              const pct = Math.round((b.revenue / maxRev) * 100)
               return (
-                <div key={b.id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  borderRadius: 8,
-                  border: '1px solid var(--line, #e5e7eb)',
-                  background: available ? '#f0fdf4' : '#fef2f2',
-                }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink, #1e293b)' }}>{b.name}</div>
-                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{b.model} · {b.marina}</div>
+                <div key={b.name} style={{ marginBottom: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{b.name}</span>
+                    <span style={{ color: 'var(--muted)' }}>€{b.revenue.toLocaleString('tr-TR')} · {b.bookings} rezervasyon</span>
                   </div>
-                  <span style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: available ? '#166534' : '#991b1b',
-                    background: available ? '#dcfce7' : '#fee2e2',
-                    padding: '3px 8px',
-                    borderRadius: 10,
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {available ? 'Müsait' : 'Dolu'}
-                  </span>
+                  <div style={{ height: 8, background: 'var(--foam)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, var(--teal), var(--cyan, #06b6d4))' }} />
+                  </div>
                 </div>
               )
-            })}
-          </div>
+            })
+          )}
+        </div>
+
+        {/* Recent */}
+        <div style={{ background: 'var(--card)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--line)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 18 }}>Son rezervasyonlar</h3>
+          {loading ? (
+            <p style={{ color: 'var(--muted)', fontSize: 14 }}>Yükleniyor…</p>
+          ) : recent.length === 0 ? (
+            <p style={{ color: 'var(--muted)', fontSize: 14 }}>Henüz rezervasyon yok.</p>
+          ) : (
+            recent.map((r, i) => (
+              <div key={r.code} style={{ padding: '10px 0', borderBottom: i < recent.length - 1 ? '1px solid var(--line)' : 'none' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>{r.boat}</span>
+                  <span style={{ fontSize: 12, color: 'var(--teal)', fontWeight: 600 }}>€{r.total_amount.toLocaleString('tr-TR')}</span>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{r.guest} · {r.code}</div>
+              </div>
+            ))
+          )}
         </div>
       </div>
-    </div>
+
+      {/* Recent bookings table */}
+      <div style={{ background: 'var(--card)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--line)' }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 18 }}>Tüm rezervasyonlar</h3>
+        {loading ? (
+          <p style={{ color: 'var(--muted)', fontSize: 14 }}>Yükleniyor…</p>
+        ) : recent.length === 0 ? (
+          <p style={{ color: 'var(--muted)', fontSize: 14 }}>Henüz rezervasyon yok.</p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: 'var(--foam)', color: 'var(--muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                {['Kod', 'Müşteri', 'Tekne', 'Tarih', 'Durum', 'Toplam'].map(h => (
+                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {recent.map((r, i) => {
+                const cfg = STATUS_MAP[r.status] ?? STATUS_MAP.pending
+                return (
+                  <tr key={r.code} style={{ borderTop: '1px solid var(--line)' }}>
+                    <td style={{ padding: '14px 16px', fontWeight: 600, color: 'var(--ink)' }}>{r.code}</td>
+                    <td style={{ padding: '14px 16px' }}>{r.guest}</td>
+                    <td style={{ padding: '14px 16px' }}>{r.boat}</td>
+                    <td style={{ padding: '14px 16px', color: 'var(--muted)' }}>{r.start_date}</td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <span style={{ padding: '3px 9px', background: cfg.bg, color: cfg.color, fontSize: 11, fontWeight: 600, borderRadius: 99 }}>{cfg.label}</span>
+                    </td>
+                    <td style={{ padding: '14px 16px', fontWeight: 600 }}>€{r.total_amount.toLocaleString('tr-TR')}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
   )
 }

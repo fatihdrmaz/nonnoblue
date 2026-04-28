@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
-import { Nav } from '@/components/Nav';
-import { Footer } from '@/components/Footer';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 const inter = Inter({
@@ -52,9 +50,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <ThemeProvider>
-          <Nav />
-          <main className="flex flex-1 flex-col">{children}</main>
-          <Footer />
+          {children}
         </ThemeProvider>
       </body>
     </html>

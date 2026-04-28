@@ -4,20 +4,31 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { BLOG_POSTS } from '@/data/mock';
 
 type BlogPost = {
   id: string;
   slug: string;
   title: string;
   excerpt: string;
-  content: string | null;
   img_url: string;
   category: string;
   read_time: string;
-  published: boolean;
   published_at: string;
-  created_at: string;
 };
+
+function normalizeMockPost(p: typeof BLOG_POSTS[0]): BlogPost {
+  return {
+    id: p.id,
+    slug: p.slug,
+    title: p.title,
+    excerpt: p.excerpt,
+    img_url: p.img,
+    category: p.category,
+    read_time: p.readTime,
+    published_at: p.date,
+  };
+}
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -27,11 +38,15 @@ export default function BlogPage() {
     const supabase = createClient();
     supabase
       .from('blog_posts')
-      .select('*')
+      .select('id,slug,title,excerpt,img_url,category,read_time,published_at')
       .eq('published', true)
       .order('published_at', { ascending: false })
-      .then(({ data }) => {
-        setPosts(data ?? []);
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setPosts(data as BlogPost[]);
+        } else {
+          setPosts(BLOG_POSTS.map(normalizeMockPost));
+        }
         setLoading(false);
       });
   }, []);
@@ -43,11 +58,10 @@ export default function BlogPage() {
         <div className="container">
           <div className="eyebrow" style={{ marginBottom: 16 }}>Blog</div>
           <h1 style={{ fontFamily: 'var(--f-serif,"Playfair Display",serif)', fontSize: 'clamp(36px,5vw,64px)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.15, marginBottom: 20 }}>
-            Yelken &amp; Denizcilik Rehberi
+            Günlük
           </h1>
           <p style={{ fontSize: 18, lineHeight: 1.65, opacity: 0.8, maxWidth: 560 }}>
-            Tekne kiralama ipuçları, rota önerileri ve Türk sularında unutulmaz
-            bir deniz tatili için bilmeniz gereken her şey.
+            Seyahat rehberleri, rota önerileri ve NonnoBlue mutfağından haberler.
           </p>
         </div>
       </div>
@@ -57,7 +71,7 @@ export default function BlogPage() {
         <div className="container">
           {loading ? (
             <div className="nb-blog-grid">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+              {[1, 2, 3].map((i) => (
                 <div key={i} style={{ opacity: 0.3 }}>
                   <div className="nb-blog-img" style={{ background: 'var(--mist)' }} />
                   <div style={{ height: 16, background: 'var(--mist)', borderRadius: 4, marginBottom: 8 }} />
@@ -79,14 +93,6 @@ export default function BlogPage() {
 }
 
 function BlogCard({ post }: { post: BlogPost }) {
-  const formattedDate = post.published_at
-    ? new Date(post.published_at).toLocaleDateString('tr-TR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : '';
-
   return (
     <Link href={`/blog/${post.slug}`} className="nb-blog" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
       <div className="nb-blog-img">
@@ -115,7 +121,7 @@ function BlogCard({ post }: { post: BlogPost }) {
         </span>
       </div>
       <div className="nb-blog-meta">
-        <span>{formattedDate}</span>
+        <span>{post.published_at}</span>
         <span>·</span>
         <span>{post.read_time} okuma</span>
       </div>

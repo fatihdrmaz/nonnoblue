@@ -6,6 +6,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
+function toPublicUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `https://eieshihgnevszcsaziyn.supabase.co/storage/v1/object/public/boat-photos/${path}`;
+}
+
 interface Route {
   id: string;
   title: string;
@@ -513,7 +519,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                 <div style={{ position: 'relative', height: 160 }}>
                   {boat.cover_photo ? (
                     <Image
-                      src={boat.cover_photo}
+                      src={toPublicUrl(boat.cover_photo)}
                       alt={boat.name}
                       fill
                       style={{ objectFit: 'cover' }}

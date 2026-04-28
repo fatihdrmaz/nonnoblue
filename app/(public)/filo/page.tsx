@@ -3,6 +3,22 @@ import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { BoatCard, BoatForCard } from '@/components/BoatCard';
+import { BOATS } from '@/data/mock';
+
+function mockToCard(b: typeof BOATS[0]): BoatForCard {
+  return {
+    id: b.slug,
+    name: b.name,
+    type: b.type,
+    ribbon: b.ribbon,
+    cabins: b.cabins,
+    maxPax: b.maxPax,
+    marina: b.marina,
+    badge: b.badge,
+    img: b.img,
+    priceFrom: b.priceFrom,
+  };
+}
 
 const ALL_MARINAS = ['Göcek', 'D-Marin Göcek', 'Marmaris', 'Bodrum'];
 const ALL_EXTRAS = ['Klima', 'Jeneratör', 'SUP', 'BBQ', 'Wi-Fi'];
@@ -61,6 +77,7 @@ function formatPrice(n: number) {
 
 export default function FiloPage() {
   const [dbBoats, setDbBoats] = useState<DbBoat[]>([]);
+  const [useMock, setUseMock] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [type, setType] = useState<'all' | string>('all');
@@ -75,15 +92,16 @@ export default function FiloPage() {
     const supabase = createClient();
     supabase
       .from('boats')
-      .select(`
-        *,
-        boat_photos(storage_path, position),
-        boat_pricing(weekly_price_eur)
-      `)
+      .select(`*, boat_photos(storage_path, position), boat_pricing(weekly_price_eur)`)
       .eq('active', true)
       .order('display_order')
-      .then(({ data }) => {
-        setDbBoats((data as DbBoat[]) ?? []);
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setDbBoats(data as DbBoat[]);
+        } else {
+          // Supabase boş/hatalı dönerse mock data kullan
+          setUseMock(true);
+        }
         setLoading(false);
       });
   }, []);
@@ -114,6 +132,18 @@ export default function FiloPage() {
   }
 
   const filtered = useMemo(() => {
+    if (useMock) {
+      let list = BOATS.filter((b) => {
+        if (type !== 'all' && b.type !== type) return false;
+        if (pax > 0 && b.maxPax < pax) return false;
+        if (b.priceFrom > priceMax) return false;
+        if (marinas.size > 0 && !marinas.has(b.marina)) return false;
+        return true;
+      });
+      if (sort === 'price-asc') list = [...list].sort((a, b) => a.priceFrom - b.priceFrom);
+      if (sort === 'price-desc') list = [...list].sort((a, b) => b.priceFrom - a.priceFrom);
+      return list.map(mockToCard);
+    }
     let list = dbBoats.filter((b) => {
       const card = toCard(b);
       if (type !== 'all' && b.type !== type) return false;
@@ -131,7 +161,7 @@ export default function FiloPage() {
     if (sort === 'price-desc') list = [...list].sort((a, b) => toCard(b).priceFrom - toCard(a).priceFrom);
     if (sort === 'year') list = [...list].sort((a, b) => b.year - a.year);
     return list.map(toCard);
-  }, [dbBoats, type, pax, sort, priceMax, marinas, extras]);
+  }, [dbBoats, useMock, type, pax, sort, priceMax, marinas, extras]);
 
   const sidebar = (
     <aside className="nb-filter">

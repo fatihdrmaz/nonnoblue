@@ -1,615 +1,564 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
-import { BOATS, MockBoat } from '@/data/mock'
+import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
-// ─── Form State Type ──────────────────────────────────────────────────────────
+type BoatPhoto = { id: string; storage_path: string; position: number }
+type BoatPricing = { id: string; start_date: string | null; end_date: string | null; weekly_price_eur: number }
 
-interface FormData {
+type Boat = {
+  id: string
+  slug: string
   name: string
-  model: string
-  builder: string
-  year: number
   type: string
-  charterType: string
+  brand: string | null
+  model: string | null
+  year: number | null
+  length_m: number | null
+  cabins: number | null
+  max_guests: number | null
+  marina: string | null
+  deposit_eur: number | null
+  active: boolean
+  display_order: number
+  boat_photos: BoatPhoto[]
+  boat_pricing: BoatPricing[]
+}
+
+type FormState = {
+  name: string
+  slug: string
+  type: string
+  model: string
+  year: string
+  length_m: string
   cabins: string
-  berths: string
-  toilets: number
-  maxPax: number
+  max_guests: string
   marina: string
-  length: string
-  beam: string
-  draft: string
-  engines: string
-  priceFrom: number
-  priceHigh: number
-  deposit: number
-  img: string
-  highlights: string
+  deposit_eur: string
+  active: boolean
 }
 
-const EMPTY_FORM: FormData = {
-  name: '',
-  model: '',
-  builder: '',
-  year: new Date().getFullYear(),
-  type: 'Katamaran',
-  charterType: 'Bareboat / Skipperli',
-  cabins: '',
-  berths: '',
-  toilets: 1,
-  maxPax: 8,
-  marina: '',
-  length: '',
-  beam: '',
-  draft: '',
-  engines: '',
-  priceFrom: 0,
-  priceHigh: 0,
-  deposit: 0,
-  img: '',
-  highlights: '',
+type EditTab = 'temel' | 'fotograflar' | 'fiyat'
+
+const EMPTY_FORM: FormState = {
+  name: '', slug: '', type: 'Katamaran', model: '', year: '',
+  length_m: '', cabins: '', max_guests: '', marina: 'D-Marin Göcek',
+  deposit_eur: '', active: true,
 }
 
-function boatToForm(b: MockBoat): FormData {
-  return {
-    name: b.name,
-    model: b.model,
-    builder: b.builder,
-    year: b.year,
-    type: b.type,
-    charterType: b.charterType,
-    cabins: b.cabins,
-    berths: b.berths,
-    toilets: b.toilets,
-    maxPax: b.maxPax,
-    marina: b.marina,
-    length: b.length,
-    beam: b.beam,
-    draft: b.draft,
-    engines: b.engines,
-    priceFrom: b.priceFrom,
-    priceHigh: b.priceHigh,
-    deposit: b.deposit,
-    img: b.img,
-    highlights: b.highlights.join('\n'),
-  }
+const BUCKET = 'boat-photos'
+
+function getPublicUrl(path: string) {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  const supabase = createClient()
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+  return data.publicUrl
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const S = {
-  card: {
-    background: 'var(--card, #fff)',
-    borderRadius: 12,
-    border: '1px solid var(--line, #e5e7eb)',
-    overflow: 'hidden',
-  } as React.CSSProperties,
-
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: 700,
-    color: 'var(--teal, #0d9488)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.07em',
-    borderBottom: '2px solid var(--teal, #0d9488)',
-    paddingBottom: 6,
-    marginBottom: 16,
-    marginTop: 0,
-  } as React.CSSProperties,
-
-  label: {
-    display: 'block',
-    fontSize: 12,
-    fontWeight: 600,
-    color: 'var(--ink, #1e293b)',
-    marginBottom: 5,
-  } as React.CSSProperties,
-
-  input: {
-    width: '100%',
-    border: '1px solid var(--line, #e5e7eb)',
-    borderRadius: 7,
-    padding: '8px 12px',
-    fontSize: 14,
-    color: 'var(--ink, #1e293b)',
-    background: 'var(--bg, #f4f6f8)',
-    outline: 'none',
-    boxSizing: 'border-box' as const,
-  } as React.CSSProperties,
-
-  select: {
-    width: '100%',
-    border: '1px solid var(--line, #e5e7eb)',
-    borderRadius: 7,
-    padding: '8px 12px',
-    fontSize: 14,
-    color: 'var(--ink, #1e293b)',
-    background: 'var(--bg, #f4f6f8)',
-    outline: 'none',
-    boxSizing: 'border-box' as const,
-    cursor: 'pointer',
-  } as React.CSSProperties,
-
-  textarea: {
-    width: '100%',
-    border: '1px solid var(--line, #e5e7eb)',
-    borderRadius: 7,
-    padding: '8px 12px',
-    fontSize: 14,
-    color: 'var(--ink, #1e293b)',
-    background: 'var(--bg, #f4f6f8)',
-    outline: 'none',
-    boxSizing: 'border-box' as const,
-    resize: 'vertical' as const,
-    minHeight: 100,
-  } as React.CSSProperties,
-
-  btnTeal: {
-    background: 'var(--teal, #0d9488)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 8,
-    padding: '9px 18px',
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap' as const,
-  } as React.CSSProperties,
-
-  btnOutlineTeal: {
-    background: 'transparent',
-    color: 'var(--teal, #0d9488)',
-    border: '1px solid var(--teal, #0d9488)',
-    borderRadius: 7,
-    padding: '6px 13px',
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap' as const,
-  } as React.CSSProperties,
-
-  btnOutlineRed: {
-    background: 'transparent',
-    color: '#ef4444',
-    border: '1px solid #ef4444',
-    borderRadius: 7,
-    padding: '6px 13px',
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap' as const,
-  } as React.CSSProperties,
-
-  th: {
-    padding: '10px 14px',
-    textAlign: 'left' as const,
-    fontSize: 12,
-    fontWeight: 700,
-    color: 'var(--deep, #0b2540)',
-    background: 'var(--mist, #f0f4f8)',
-    borderBottom: '1px solid var(--line, #e5e7eb)',
-    whiteSpace: 'nowrap' as const,
-  } as React.CSSProperties,
-
-  td: {
-    padding: '10px 14px',
-    fontSize: 14,
-    color: 'var(--ink, #1e293b)',
-    borderBottom: '1px solid var(--line, #e5e7eb)',
-    verticalAlign: 'middle' as const,
-  } as React.CSSProperties,
-}
-
-// ─── Field Component ──────────────────────────────────────────────────────────
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label style={S.label}>{label}</label>
-      {children}
-    </div>
-  )
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminFiloPage() {
-  const [boats, setBoats] = useState<MockBoat[]>(BOATS)
-  const [selected, setSelected] = useState<MockBoat | null>(null)
-  const [mode, setMode] = useState<'list' | 'edit' | 'add'>('list')
-  const [search, setSearch] = useState('')
-  const [form, setForm] = useState<FormData>(EMPTY_FORM)
+  const router = useRouter()
+  const [boats, setBoats] = useState<Boat[]>([])
+  const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState<string | null>(null)
+  const [editTab, setEditTab] = useState<EditTab>('temel')
+  const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState('')
 
-  // ── Filtered list ──
-  const filtered = boats.filter(
-    (b) =>
-      b.name.toLowerCase().includes(search.toLowerCase()) ||
-      b.model.toLowerCase().includes(search.toLowerCase()),
-  )
+  // Photo state
+  const [photos, setPhotos] = useState<BoatPhoto[]>([])
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ── Handlers ──
-  function handleEdit(boat: MockBoat) {
-    setSelected(boat)
-    setForm(boatToForm(boat))
-    setMode('edit')
+  // Pricing state
+  const [prices, setPrices] = useState<BoatPricing[]>([])
+  const [savingPrice, setSavingPrice] = useState(false)
+
+  useEffect(() => { fetchBoats() }, [])
+
+  async function fetchBoats() {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('boats')
+      .select('id,slug,name,type,brand,model,year,length_m,cabins,max_guests,marina,deposit_eur,active,display_order,boat_photos(id,storage_path,position),boat_pricing(id,start_date,end_date,weekly_price_eur)')
+      .order('display_order')
+    setBoats((data ?? []) as Boat[])
+    setLoading(false)
   }
 
-  function handleAdd() {
-    setSelected(null)
+  async function fetchPhotos(boatId: string) {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('boat_photos')
+      .select('id,storage_path,position')
+      .eq('boat_id', boatId)
+      .order('position')
+    setPhotos((data ?? []) as BoatPhoto[])
+  }
+
+  async function fetchPrices(boatId: string) {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('boat_pricing')
+      .select('id,start_date,end_date,weekly_price_eur')
+      .eq('boat_id', boatId)
+      .order('start_date')
+    setPrices((data ?? []) as BoatPricing[])
+  }
+
+  function startEdit(boat: Boat, tab: EditTab = 'temel') {
+    setEditing(boat.id)
+    setEditTab(tab)
+    setForm({
+      name: boat.name, slug: boat.slug, type: boat.type,
+      model: boat.model ?? '', year: boat.year?.toString() ?? '',
+      length_m: boat.length_m?.toString() ?? '', cabins: boat.cabins?.toString() ?? '',
+      max_guests: boat.max_guests?.toString() ?? '', marina: boat.marina ?? '',
+      deposit_eur: boat.deposit_eur?.toString() ?? '', active: boat.active,
+    })
+    setPhotos(boat.boat_photos ?? [])
+    setPrices(boat.boat_pricing ?? [])
+    setMsg('')
+    if (tab === 'fotograflar') fetchPhotos(boat.id)
+    if (tab === 'fiyat') fetchPrices(boat.id)
+  }
+
+  function startNew() {
+    setEditing('new')
+    setEditTab('temel')
     setForm(EMPTY_FORM)
-    setMode('add')
+    setPhotos([])
+    setPrices([])
+    setMsg('')
   }
 
-  function handleDelete(boat: MockBoat) {
-    const ok = window.confirm(`"${boat.name}" teknesini silmek istediğinizden emin misiniz?`)
-    if (ok) {
-      setBoats((prev) => prev.filter((b) => b.id !== boat.id))
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    const supabase = createClient()
+    const payload = {
+      name: form.name, slug: form.slug, type: form.type,
+      model: form.model || null,
+      year: form.year ? parseInt(form.year) : null,
+      length_m: form.length_m ? parseFloat(form.length_m) : null,
+      cabins: form.cabins ? parseInt(form.cabins) : null,
+      max_guests: form.max_guests ? parseInt(form.max_guests) : null,
+      marina: form.marina || null,
+      deposit_eur: form.deposit_eur ? parseInt(form.deposit_eur) : null,
+      active: form.active,
     }
-  }
 
-  function handleSave() {
-    const highlightsArr = form.highlights
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean)
-
-    if (mode === 'add') {
-      const newBoat: MockBoat = {
-        id: Date.now().toString(),
-        slug: form.name.toLowerCase().replace(/\s+/g, '-'),
-        name: form.name,
-        model: form.model,
-        builder: form.builder,
-        year: form.year,
-        type: form.type,
-        charterType: form.charterType,
-        cabins: form.cabins,
-        berths: form.berths,
-        toilets: form.toilets,
-        maxPax: form.maxPax,
-        marina: form.marina,
-        length: form.length,
-        lengthFt: '',
-        beam: form.beam,
-        draft: form.draft,
-        engines: form.engines,
-        fuelType: '',
-        fuel: '',
-        water: '',
-        mainSail: '',
-        deposit: form.deposit,
-        priceFrom: form.priceFrom,
-        priceHigh: form.priceHigh,
-        badge: null,
-        ribbon: '',
-        img: form.img,
-        gallery: [],
-        prices: [],
-        equipment: {},
-        optional: [],
-        services: [],
-        highlights: highlightsArr,
-      }
-      setBoats((prev) => [...prev, newBoat])
-    } else if (mode === 'edit' && selected) {
-      setBoats((prev) =>
-        prev.map((b) =>
-          b.id === selected.id
-            ? {
-                ...b,
-                name: form.name,
-                model: form.model,
-                builder: form.builder,
-                year: form.year,
-                type: form.type,
-                charterType: form.charterType,
-                cabins: form.cabins,
-                berths: form.berths,
-                toilets: form.toilets,
-                maxPax: form.maxPax,
-                marina: form.marina,
-                length: form.length,
-                beam: form.beam,
-                draft: form.draft,
-                engines: form.engines,
-                priceFrom: form.priceFrom,
-                priceHigh: form.priceHigh,
-                deposit: form.deposit,
-                img: form.img,
-                highlights: highlightsArr,
-                slug: form.name.toLowerCase().replace(/\s+/g, '-'),
-              }
-            : b,
-        ),
-      )
+    if (editing === 'new') {
+      const { data, error } = await supabase.from('boats').insert(payload).select().single()
+      if (error) { setMsg('Hata: ' + error.message); setSaving(false); return }
+      setEditing(data.id)
+      setEditTab('fotograflar')
+      setMsg('Tekne oluşturuldu ✓ Şimdi fotoğraf ekleyebilirsiniz.')
+      await fetchBoats()
+      setSaving(false)
+      return
     }
-    setMode('list')
-    setSelected(null)
+
+    const { error } = await supabase.from('boats').update(payload).eq('id', editing!)
+    if (error) { setMsg('Hata: ' + error.message); setSaving(false); return }
+    setMsg('Kaydedildi ✓')
+    await fetchBoats()
+    setSaving(false)
+    setTimeout(() => setMsg(''), 2000)
   }
 
-  function set(field: keyof FormData, value: string | number) {
-    setForm((prev) => ({ ...prev, [field]: value }))
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length || !editing || editing === 'new') return
+    setUploading(true)
+    const supabase = createClient()
+    for (const file of files) {
+      const ext = file.name.split('.').pop()
+      const path = `${editing}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(path, file)
+      if (uploadErr) { setMsg('Upload hatası: ' + uploadErr.message); continue }
+      const nextPos = photos.length > 0 ? Math.max(...photos.map(p => p.position)) + 1 : 0
+      const { data, error: dbErr } = await supabase
+        .from('boat_photos')
+        .insert({ boat_id: editing, storage_path: path, position: nextPos })
+        .select()
+        .single()
+      if (!dbErr && data) setPhotos(prev => [...prev, data as BoatPhoto])
+    }
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // LIST MODE
-  // ─────────────────────────────────────────────────────────────────────────────
+  async function handlePhotoDelete(photo: BoatPhoto) {
+    const supabase = createClient()
+    await supabase.storage.from(BUCKET).remove([photo.storage_path])
+    await supabase.from('boat_photos').delete().eq('id', photo.id)
+    setPhotos(prev => prev.filter(p => p.id !== photo.id))
+  }
 
-  if (mode === 'list') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--ink, #1e293b)', fontFamily: 'Georgia, serif' }}>
-            Filo Yönetimi
-          </h2>
-          <button style={S.btnTeal} onClick={handleAdd}>
-            + Yeni Tekne Ekle
-          </button>
-        </div>
-
-        {/* Search */}
-        <div style={S.card}>
-          <div style={{ padding: '14px 16px' }}>
-            <input
-              style={{ ...S.input, maxWidth: 360 }}
-              placeholder="Tekne adı veya modele göre ara..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          {/* Table */}
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
-              <thead>
-                <tr>
-                  <th style={S.th}>Fotoğraf</th>
-                  <th style={S.th}>Ad</th>
-                  <th style={S.th}>Model</th>
-                  <th style={S.th}>Tür</th>
-                  <th style={S.th}>Kabin / Kişi</th>
-                  <th style={S.th}>Fiyat (dan)</th>
-                  <th style={S.th}>Marina</th>
-                  <th style={S.th}>İşlemler</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={8} style={{ ...S.td, textAlign: 'center', color: 'var(--sand, #94a3b8)', padding: 32 }}>
-                      Sonuç bulunamadı.
-                    </td>
-                  </tr>
-                )}
-                {filtered.map((boat) => (
-                  <tr key={boat.id} style={{ transition: 'background 0.1s' }}>
-                    {/* Fotoğraf */}
-                    <td style={S.td}>
-                      <div style={{ position: 'relative', width: 60, height: 40, borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
-                        <Image
-                          src={boat.img}
-                          alt={boat.name}
-                          fill
-                          style={{ objectFit: 'cover' }}
-                          sizes="60px"
-                        />
-                      </div>
-                    </td>
-                    {/* Ad */}
-                    <td style={{ ...S.td, fontWeight: 600 }}>{boat.name}</td>
-                    {/* Model */}
-                    <td style={S.td}>{boat.model}</td>
-                    {/* Tür */}
-                    <td style={S.td}>
-                      <span style={{
-                        display: 'inline-block',
-                        padding: '2px 10px',
-                        borderRadius: 99,
-                        background: 'var(--foam, #e0f2fe)',
-                        color: 'var(--deep, #0b2540)',
-                        fontSize: 12,
-                        fontWeight: 600,
-                      }}>
-                        {boat.type}
-                      </span>
-                    </td>
-                    {/* Kabin / Kişi */}
-                    <td style={S.td}>{boat.cabins} kabin · {boat.maxPax} kişi</td>
-                    {/* Fiyat */}
-                    <td style={{ ...S.td, fontWeight: 600, color: 'var(--teal, #0d9488)' }}>
-                      €{boat.priceFrom.toLocaleString()}
-                    </td>
-                    {/* Marina */}
-                    <td style={S.td}>{boat.marina}</td>
-                    {/* İşlemler */}
-                    <td style={S.td}>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button style={S.btnOutlineTeal} onClick={() => handleEdit(boat)}>
-                          Düzenle
-                        </button>
-                        <button style={S.btnOutlineRed} onClick={() => handleDelete(boat)}>
-                          Sil
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer count */}
-          <div style={{ padding: '10px 16px', borderTop: '1px solid var(--line, #e5e7eb)', fontSize: 13, color: 'var(--sand, #94a3b8)' }}>
-            {filtered.length} tekne gösteriliyor
-          </div>
-        </div>
-      </div>
+  async function handleSetCover(photo: BoatPhoto) {
+    const supabase = createClient()
+    const updates = photos.map((p, i) => ({
+      id: p.id,
+      position: p.id === photo.id ? 0 : i + 1,
+    }))
+    for (const u of updates) {
+      await supabase.from('boat_photos').update({ position: u.position }).eq('id', u.id)
+    }
+    setPhotos(prev =>
+      [...prev].map(p => ({ ...p, position: p.id === photo.id ? 0 : prev.indexOf(p) + 1 }))
+        .sort((a, b) => a.position - b.position)
     )
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // EDIT / ADD MODE
-  // ─────────────────────────────────────────────────────────────────────────────
+  function addPriceRow() {
+    setPrices(prev => [...prev, { id: `new-${Date.now()}`, start_date: '', end_date: '', weekly_price_eur: 0 }])
+  }
 
-  const isEdit = mode === 'edit'
+  async function savePrices() {
+    if (!editing || editing === 'new') return
+    setSavingPrice(true)
+    const supabase = createClient()
+    for (const p of prices) {
+      const payload = {
+        boat_id: editing,
+        start_date: p.start_date || null,
+        end_date: p.end_date || null,
+        weekly_price_eur: p.weekly_price_eur,
+      }
+      if (p.id.startsWith('new-')) {
+        await supabase.from('boat_pricing').insert(payload)
+      } else {
+        await supabase.from('boat_pricing').update(payload).eq('id', p.id)
+      }
+    }
+    await fetchPrices(editing)
+    setSavingPrice(false)
+    setMsg('Fiyatlar kaydedildi ✓')
+    setTimeout(() => setMsg(''), 2000)
+  }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 860 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--ink, #1e293b)', fontFamily: 'Georgia, serif' }}>
-          {isEdit ? 'Tekne Düzenle' : 'Yeni Tekne Ekle'}
-        </h2>
-        <button
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: 14,
-            color: 'var(--teal, #0d9488)',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: 0,
-          }}
-          onClick={() => setMode('list')}
-        >
-          ← Listeye Dön
+  async function deletePrice(priceId: string) {
+    if (priceId.startsWith('new-')) { setPrices(prev => prev.filter(p => p.id !== priceId)); return }
+    const supabase = createClient()
+    await supabase.from('boat_pricing').delete().eq('id', priceId)
+    setPrices(prev => prev.filter(p => p.id !== priceId))
+  }
+
+  async function toggleActive(id: string, current: boolean) {
+    const supabase = createClient()
+    await supabase.from('boats').update({ active: !current }).eq('id', id)
+    setBoats(prev => prev.map(b => b.id === id ? { ...b, active: !current } : b))
+  }
+
+  // ── EDIT VIEW ──────────────────────────────────────────────────────────────
+  if (editing) {
+    const isNew = editing === 'new'
+    const currentBoat = boats.find(b => b.id === editing)
+    const sortedPhotos = [...photos].sort((a, b) => a.position - b.position)
+
+    return (
+      <>
+        <button onClick={() => { setEditing(null); setMsg('') }} className="btn btn-ghost btn-sm" style={{ marginBottom: 16 }}>
+          ← Filo'ya dön
         </button>
-      </div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>
+          {isNew ? 'Yeni tekne' : form.name}
+        </h1>
 
-      {/* Form */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-        {/* Temel Bilgiler */}
-        <div style={{ ...S.card, padding: 24 }}>
-          <p style={S.sectionTitle}>Temel Bilgiler</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
-            <Field label="Ad">
-              <input style={S.input} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Tekne adı" />
-            </Field>
-            <Field label="Model">
-              <input style={S.input} value={form.model} onChange={(e) => set('model', e.target.value)} placeholder="ör. Lagoon 42" />
-            </Field>
-            <Field label="Builder / Marka">
-              <input style={S.input} value={form.builder} onChange={(e) => set('builder', e.target.value)} placeholder="ör. Lagoon" />
-            </Field>
-            <Field label="Yıl">
-              <input style={S.input} type="number" value={form.year} onChange={(e) => set('year', Number(e.target.value))} />
-            </Field>
-            <Field label="Tür">
-              <select style={S.select} value={form.type} onChange={(e) => set('type', e.target.value)}>
-                <option value="Katamaran">Katamaran</option>
-                <option value="Yelkenli">Yelkenli</option>
-                <option value="Motor">Motor</option>
-              </select>
-            </Field>
-            <Field label="Charter Türü">
-              <input style={S.input} value={form.charterType} onChange={(e) => set('charterType', e.target.value)} placeholder="ör. Bareboat / Skipperli" />
-            </Field>
+        {/* Tabs */}
+        {!isNew && (
+          <div style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid var(--line)', paddingBottom: 0 }}>
+            {([['temel', 'Temel bilgiler'], ['fotograflar', 'Fotoğraflar'], ['fiyat', 'Fiyat tablosu']] as [EditTab, string][]).map(([tab, label]) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setEditTab(tab)
+                  if (tab === 'fotograflar' && editing !== 'new') fetchPhotos(editing)
+                  if (tab === 'fiyat' && editing !== 'new') fetchPrices(editing)
+                }}
+                style={{
+                  padding: '10px 20px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
+                  border: 'none', background: 'transparent',
+                  borderBottom: editTab === tab ? '2px solid var(--teal)' : '2px solid transparent',
+                  color: editTab === tab ? 'var(--teal)' : 'var(--muted)',
+                  marginBottom: -1,
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-        </div>
+        )}
 
-        {/* Kapasite */}
-        <div style={{ ...S.card, padding: 24 }}>
-          <p style={S.sectionTitle}>Kapasite</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
-            <Field label="Kabin Sayısı">
-              <input style={S.input} value={form.cabins} onChange={(e) => set('cabins', e.target.value)} placeholder="ör. 4+1" />
-            </Field>
-            <Field label="Yatak Sayısı">
-              <input style={S.input} value={form.berths} onChange={(e) => set('berths', e.target.value)} placeholder="ör. 8+2" />
-            </Field>
-            <Field label="Tuvalet Sayısı">
-              <input style={S.input} type="number" value={form.toilets} onChange={(e) => set('toilets', Number(e.target.value))} min={1} />
-            </Field>
-            <Field label="Maks. Kişi">
-              <input style={S.input} type="number" value={form.maxPax} onChange={(e) => set('maxPax', Number(e.target.value))} min={1} />
-            </Field>
-            <Field label="Marina">
-              <input style={S.input} value={form.marina} onChange={(e) => set('marina', e.target.value)} placeholder="ör. Göcek" />
-            </Field>
+        {msg && (
+          <div style={{ padding: '12px 16px', background: msg.startsWith('Hata') ? '#fee2e2' : 'var(--foam)', borderRadius: 8, fontSize: 13, color: msg.startsWith('Hata') ? '#991b1b' : 'var(--teal)', fontWeight: 600, marginBottom: 20 }}>
+            {msg}
           </div>
-        </div>
+        )}
 
-        {/* Boyutlar */}
-        <div style={{ ...S.card, padding: 24 }}>
-          <p style={S.sectionTitle}>Boyutlar</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
-            <Field label="Uzunluk (m)">
-              <input style={S.input} value={form.length} onChange={(e) => set('length', e.target.value)} placeholder="ör. 12.78 m" />
-            </Field>
-            <Field label="Genişlik (Beam)">
-              <input style={S.input} value={form.beam} onChange={(e) => set('beam', e.target.value)} placeholder="ör. 7.37 m" />
-            </Field>
-            <Field label="Su Kesimi (Draft)">
-              <input style={S.input} value={form.draft} onChange={(e) => set('draft', e.target.value)} placeholder="ör. 1.20 m" />
-            </Field>
-            <Field label="Motor">
-              <input style={S.input} value={form.engines} onChange={(e) => set('engines', e.target.value)} placeholder="ör. 2 × Yanmar 57 HP" />
-            </Field>
-          </div>
-        </div>
-
-        {/* Fiyatlandırma */}
-        <div style={{ ...S.card, padding: 24 }}>
-          <p style={S.sectionTitle}>Fiyatlandırma</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
-            <Field label="Düşük Sezon Fiyatı (€)">
-              <input style={S.input} type="number" value={form.priceFrom} onChange={(e) => set('priceFrom', Number(e.target.value))} min={0} />
-            </Field>
-            <Field label="Yüksek Sezon Fiyatı (€)">
-              <input style={S.input} type="number" value={form.priceHigh} onChange={(e) => set('priceHigh', Number(e.target.value))} min={0} />
-            </Field>
-            <Field label="Depozito (€)">
-              <input style={S.input} type="number" value={form.deposit} onChange={(e) => set('deposit', Number(e.target.value))} min={0} />
-            </Field>
-          </div>
-        </div>
-
-        {/* Fotoğraf */}
-        <div style={{ ...S.card, padding: 24 }}>
-          <p style={S.sectionTitle}>Fotoğraf</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px', alignItems: 'start' }}>
-            <Field label="Kapak Fotoğraf URL">
-              <input style={S.input} value={form.img} onChange={(e) => set('img', e.target.value)} placeholder="https://images.unsplash.com/..." />
-            </Field>
-            {form.img && (
-              <div>
-                <label style={S.label}>Önizleme</label>
-                <div style={{ position: 'relative', width: 120, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line, #e5e7eb)' }}>
-                  <Image src={form.img} alt="preview" fill style={{ objectFit: 'cover' }} sizes="120px" />
+        {/* ── TAB: Temel Bilgiler ── */}
+        {(isNew || editTab === 'temel') && (
+          <form onSubmit={handleSave}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
+              <div style={{ background: 'var(--card)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--line)' }}>
+                <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
+                  Temel bilgiler
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div><label className="label">Tekne adı *</label><input required className="input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Örn. Ayza 2" /></div>
+                  <div><label className="label">Slug *</label><input required className="input" value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} placeholder="ayza-2" /></div>
+                  <div><label className="label">Model</label><input className="input" value={form.model} onChange={e => setForm(p => ({ ...p, model: e.target.value }))} placeholder="Lagoon 42" /></div>
+                  <div><label className="label">Yıl</label><input className="input" type="number" value={form.year} onChange={e => setForm(p => ({ ...p, year: e.target.value }))} placeholder="2024" /></div>
+                  <div>
+                    <label className="label">Tip</label>
+                    <select className="input" value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
+                      <option>Katamaran</option><option>Yelkenli</option><option>Motoryat</option>
+                    </select>
+                  </div>
+                  <div><label className="label">Boy (m)</label><input className="input" type="number" step="0.1" value={form.length_m} onChange={e => setForm(p => ({ ...p, length_m: e.target.value }))} placeholder="12.80" /></div>
+                  <div><label className="label">Kabin</label><input className="input" type="number" value={form.cabins} onChange={e => setForm(p => ({ ...p, cabins: e.target.value }))} placeholder="4" /></div>
+                  <div><label className="label">Maks. kişi</label><input className="input" type="number" value={form.max_guests} onChange={e => setForm(p => ({ ...p, max_guests: e.target.value }))} placeholder="10" /></div>
+                  <div>
+                    <label className="label">Marina</label>
+                    <select className="input" value={form.marina} onChange={e => setForm(p => ({ ...p, marina: e.target.value }))}>
+                      <option>D-Marin Göcek</option><option>Göcek Marina</option><option>Marmaris</option><option>Bodrum</option>
+                    </select>
+                  </div>
+                  <div><label className="label">Depozito (€)</label><input className="input" type="number" value={form.deposit_eur} onChange={e => setForm(p => ({ ...p, deposit_eur: e.target.value }))} /></div>
                 </div>
               </div>
-            )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ background: 'var(--card)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--line)' }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
+                    Yayın durumu
+                  </h4>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={form.active} onChange={e => setForm(p => ({ ...p, active: e.target.checked }))} />
+                    Sitede yayında
+                  </label>
+                </div>
+                <button type="submit" disabled={saving} className="btn btn-primary" style={{ justifyContent: 'center' }}>
+                  {saving ? 'Kaydediliyor…' : 'Kaydet'}
+                </button>
+                <button type="button" onClick={() => setEditing(null)} className="btn btn-ghost">İptal</button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {/* ── TAB: Fotoğraflar ── */}
+        {!isNew && editTab === 'fotograflar' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20 }}>
+            <div style={{ background: 'var(--card)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--line)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
+                  Fotoğraflar ({sortedPhotos.length})
+                </h4>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? 'Yükleniyor…' : '+ Fotoğraf yükle'}
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handlePhotoUpload} />
+              </div>
+
+              {/* Upload drop zone */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  border: '2px dashed var(--line)', borderRadius: 8, padding: '28px 20px',
+                  textAlign: 'center', cursor: 'pointer', marginBottom: 20,
+                  background: 'var(--mist)', color: 'var(--muted)', fontSize: 13,
+                }}
+              >
+                {uploading ? 'Yükleniyor…' : 'Dosya seçin veya buraya sürükleyin'}
+              </div>
+
+              {sortedPhotos.length === 0 ? (
+                <p style={{ color: 'var(--muted)', fontSize: 13 }}>Henüz fotoğraf yok.</p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                  {sortedPhotos.map((photo, i) => (
+                    <div key={photo.id} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
+                      <img
+                        src={getPublicUrl(photo.storage_path)}
+                        alt=""
+                        style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', display: 'block' }}
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                      {i === 0 && (
+                        <div style={{ position: 'absolute', top: 6, left: 6, background: 'var(--teal)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4 }}>
+                          KAPAK
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: 4, padding: '6px 8px', background: 'var(--card)' }}>
+                        {i !== 0 && (
+                          <button className="btn btn-ghost btn-sm" style={{ flex: 1, fontSize: 11 }} onClick={() => handleSetCover(photo)}>
+                            Kapak yap
+                          </button>
+                        )}
+                        <button
+                          className="btn btn-sm"
+                          style={{ flex: 1, fontSize: 11, background: '#fee2e2', color: '#991b1b', border: 'none' }}
+                          onClick={() => handlePhotoDelete(photo)}
+                        >
+                          Sil
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ background: 'var(--card)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--line)', height: 'fit-content' }}>
+              <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
+                Bilgi
+              </h4>
+              <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+                İlk fotoğraf kapak fotoğrafı olarak görünür. Fotoğrafları yükledikten sonra "Kapak yap" ile sıralayabilirsiniz.
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 12 }}>
+                Desteklenen: JPG, PNG, WebP<br />
+                Maks. boyut: 10 MB
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Özellikler */}
-        <div style={{ ...S.card, padding: 24 }}>
-          <p style={S.sectionTitle}>Özellikler (Highlights)</p>
-          <Field label="Her satıra bir özellik yazın">
-            <textarea
-              style={S.textarea}
-              value={form.highlights}
-              onChange={(e) => set('highlights', e.target.value)}
-              placeholder={'Klimalı 4 kabin\nJeneratör + Watermaker\nNespresso dahil'}
-            />
-          </Field>
-        </div>
+        {/* ── TAB: Fiyat Tablosu ── */}
+        {!isNew && editTab === 'fiyat' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20 }}>
+            <div style={{ background: 'var(--card)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--line)' }}>
+              <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 20, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
+                Sezon fiyatları
+              </h4>
 
-        {/* Kaydet */}
-        <button
-          style={{ ...S.btnTeal, width: '100%', padding: '13px 20px', fontSize: 15, borderRadius: 10 }}
-          onClick={handleSave}
-        >
-          {isEdit ? 'Değişiklikleri Kaydet' : 'Tekneyi Ekle'}
-        </button>
+              {/* Header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 90px', gap: 8, fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, padding: '0 4px' }}>
+                <span>Başlangıç</span><span>Bitiş</span><span>€ / hafta</span><span></span>
+              </div>
+
+              {prices.map((p) => (
+                <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 90px', gap: 8, marginBottom: 8 }}>
+                  <input
+                    className="input"
+                    type="date"
+                    value={p.start_date ?? ''}
+                    onChange={e => setPrices(prev => prev.map(r => r.id === p.id ? { ...r, start_date: e.target.value } : r))}
+                  />
+                  <input
+                    className="input"
+                    type="date"
+                    value={p.end_date ?? ''}
+                    onChange={e => setPrices(prev => prev.map(r => r.id === p.id ? { ...r, end_date: e.target.value } : r))}
+                  />
+                  <input
+                    className="input"
+                    type="number"
+                    value={p.weekly_price_eur || ''}
+                    placeholder="3500"
+                    onChange={e => setPrices(prev => prev.map(r => r.id === p.id ? { ...r, weekly_price_eur: parseInt(e.target.value) || 0 } : r))}
+                  />
+                  <button
+                    className="btn btn-sm"
+                    style={{ background: '#fee2e2', color: '#991b1b', border: 'none' }}
+                    onClick={() => deletePrice(p.id)}
+                  >
+                    Sil
+                  </button>
+                </div>
+              ))}
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <button className="btn btn-ghost btn-sm" onClick={addPriceRow}>+ Dönem ekle</button>
+                <button className="btn btn-primary btn-sm" onClick={savePrices} disabled={savingPrice}>
+                  {savingPrice ? 'Kaydediliyor…' : 'Kaydet'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--card)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--line)', height: 'fit-content' }}>
+              <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
+                Bilgi
+              </h4>
+              <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+                Her sezon için başlangıç/bitiş tarihi ve haftalık fiyat girin. Çakışan dönemler varsa en düşük fiyat uygulanır.
+              </p>
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }
+
+  // ── LIST VIEW ──────────────────────────────────────────────────────────────
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)' }}>Filo yönetimi</h1>
+          <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>{loading ? '…' : `${boats.length} tekne`}</p>
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={startNew}>+ Yeni tekne ekle</button>
       </div>
-    </div>
+
+      {loading ? (
+        <p style={{ color: 'var(--muted)', padding: 32 }}>Yükleniyor…</p>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
+          {boats.map(b => {
+            const sortedPhotos = [...(b.boat_photos ?? [])].sort((a, c) => a.position - c.position)
+            const img = sortedPhotos[0]?.storage_path ?? ''
+            const imgUrl = img ? getPublicUrl(img) : ''
+            const prices = (b.boat_pricing ?? []).map(p => p.weekly_price_eur)
+            const priceFrom = prices.length ? Math.min(...prices) : 0
+            return (
+              <div key={b.id} style={{ background: 'var(--card)', borderRadius: 'var(--radius)', border: '1px solid var(--line)', overflow: 'hidden', display: 'grid', gridTemplateColumns: '150px 1fr' }}>
+                {imgUrl ? (
+                  <img src={imgUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: 160 }} />
+                ) : (
+                  <div style={{ background: 'var(--mist)', minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 12 }}>
+                    Fotoğraf yok
+                  </div>
+                )}
+                <div style={{ padding: 18 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <div>
+                      <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)' }}>{b.name}</h3>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{b.model} · {b.year}</div>
+                    </div>
+                    <span
+                      onClick={() => toggleActive(b.id, b.active)}
+                      style={{ padding: '3px 8px', background: b.active ? 'rgba(16,185,129,.12)' : 'rgba(239,68,68,.1)', color: b.active ? '#059669' : '#991b1b', fontSize: 11, fontWeight: 600, borderRadius: 99, cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      {b.active ? 'Aktif' : 'Pasif'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12, display: 'flex', gap: 14 }}>
+                    <span>{b.cabins} kabin · {b.max_guests} kişi</span>
+                    {priceFrom > 0 && <span>€{priceFrom.toLocaleString('tr-TR')}/hf</span>}
+                    {b.marina && <span>{b.marina}</span>}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button className="btn btn-ghost btn-sm" onClick={() => startEdit(b, 'temel')}>Düzenle</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => startEdit(b, 'fiyat')}>Fiyat tablosu</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => startEdit(b, 'fotograflar')}>Fotoğraflar</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => router.push('/admin/takvim')}>Takvim</button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </>
   )
 }

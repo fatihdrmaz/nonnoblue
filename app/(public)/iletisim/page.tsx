@@ -2,7 +2,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { BRAND } from '@/data/mock';
+import { createClient } from '@/lib/supabase/client';
+
+const BRAND = {
+  email: 'ahoy@nonnoblue.com',
+  phone: '+90 539 440 34 29',
+  whatsapp: 'https://wa.me/905394403429',
+  address: 'D-Marin Göcek, 48310 Fethiye / Muğla',
+  socials: {
+    instagram: 'https://instagram.com/nonnoblue',
+    facebook: 'https://facebook.com/nonnoblue',
+    youtube: 'https://youtube.com/@nonnoblue',
+  },
+};
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 
@@ -87,15 +99,32 @@ export default function IletisimPage() {
     mesaj: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log('İletişim formu:', form);
+    setSubmitting(true);
+    setSubmitError('');
+    const supabase = createClient();
+    const { error } = await supabase.from('contact_forms').insert({
+      full_name: form.adSoyad,
+      email: form.eposta,
+      phone: form.telefon || null,
+      subject: form.konu || null,
+      message: form.mesaj,
+    });
+    if (error) {
+      setSubmitError('Bir hata oluştu, lütfen tekrar deneyin.');
+      setSubmitting(false);
+      return;
+    }
     setSubmitted(true);
+    setSubmitting(false);
   }
 
   return (
@@ -231,22 +260,28 @@ export default function IletisimPage() {
                     />
                   </div>
 
+                  {submitError && (
+                    <div style={{ padding: '12px 16px', background: '#fee2e2', borderRadius: 8, color: '#991b1b', fontSize: 13 }}>
+                      {submitError}
+                    </div>
+                  )}
                   <button
                     type="submit"
+                    disabled={submitting}
                     style={{
-                      background: 'var(--teal)',
+                      background: submitting ? 'var(--muted)' : 'var(--teal)',
                       color: '#fff',
                       border: 'none',
                       borderRadius: 'var(--radius-sm)',
                       padding: '14px 28px',
                       fontSize: 15,
                       fontWeight: 700,
-                      cursor: 'pointer',
+                      cursor: submitting ? 'not-allowed' : 'pointer',
                       transition: 'background 0.2s',
                       letterSpacing: '0.02em',
                     }}
                   >
-                    Gönder
+                    {submitting ? 'Gönderiliyor…' : 'Gönder'}
                   </button>
                 </form>
               )}

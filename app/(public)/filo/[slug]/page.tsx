@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -247,6 +247,18 @@ type DbRoute = {
   description: string;
 };
 
+type DbAvailability = {
+  start_date: string;
+  end_date: string;
+  status: string;
+};
+
+type DbBookingSlot = {
+  start_date: string;
+  end_date: string;
+  status: string;
+};
+
 type DbBoatWithPhotos = DbBoat & {
   boat_photos: { storage_path: string; position: number }[];
   boat_pricing: { weekly_price_eur: number }[];
@@ -264,19 +276,18 @@ function toCard(boat: DbBoatWithPhotos): BoatForCard {
     maxPax: boat.max_guests,
     marina: boat.marina,
     badge: null,
-    img: sortedPhotos[0]?.storage_path ?? '',
+    img: (() => { const p = sortedPhotos[0]?.storage_path ?? ''; return p.startsWith('http') ? p : p ? `https://eieshihgnevszcsaziyn.supabase.co/storage/v1/object/public/boat-photos/${p}` : ''; })(),
     priceFrom: prices.length > 0 ? Math.min(...prices) : 0,
   };
 }
 
-interface PageProps {
-  params: { slug: string };
-}
-
-export default function BoatDetailPage({ params }: PageProps) {
+export default function BoatDetailPage() {
+  const params = useParams<{ slug: string }>();
   const [boat, setBoat] = useState<DbBoat | null>(null);
   const [photos, setPhotos] = useState<DbPhoto[]>([]);
   const [pricing, setPricing] = useState<DbPricing[]>([]);
+  const [availability, setAvailability] = useState<DbAvailability[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<DbBookingSlot[]>([]);
   const [otherBoats, setOtherBoats] = useState<DbBoatWithPhotos[]>([]);
   const [suggestedRoutes, setSuggestedRoutes] = useState<DbRoute[]>([]);
   const [loading, setLoading] = useState(true);
@@ -321,7 +332,20 @@ export default function BoatDetailPage({ params }: PageProps) {
         .eq('boat_id', boatData.id)
         .order('start_date');
 
-      // 4. Fetch other boats with photos and pricing
+      // 4. Fetch availability blocks for this boat
+      const { data: availData } = await supabase
+        .from('boat_availability')
+        .select('start_date,end_date,status')
+        .eq('boat_id', boatData.id)
+
+      // 5. Fetch non-cancelled bookings for this boat
+      const { data: bkgData } = await supabase
+        .from('bookings')
+        .select('start_date,end_date,status')
+        .eq('boat_id', boatData.id)
+        .neq('status', 'cancelled')
+
+      // 6. Fetch other boats with photos and pricing
       const { data: othersData } = await supabase
         .from('boats')
         .select(`
@@ -342,14 +366,25 @@ export default function BoatDetailPage({ params }: PageProps) {
         .order('display_order')
         .limit(2);
 
+      const avail = (availData ?? []) as DbAvailability[]
+      const bkgs = (bkgData ?? []) as DbBookingSlot[]
+
       setPhotos((photosData as DbPhoto[]) ?? []);
       setPricing((pricingData as DbPricing[]) ?? []);
+      setAvailability(avail);
+      setBookedSlots(bkgs);
       setOtherBoats((othersData as DbBoatWithPhotos[]) ?? []);
       setSuggestedRoutes((routesData as DbRoute[]) ?? []);
 
-      // Set initial selected week to middle
-      const priceCount = (pricingData ?? []).length;
-      setSelectedWeek(Math.floor(priceCount / 2));
+      // Set initial selected week to first available week
+      const priceList = (pricingData ?? []) as DbPricing[]
+      const firstAvail = priceList.findIndex(p => {
+        const s = p.start_date; const e = p.end_date
+        const overlapsAvail = avail.some(a => s <= a.end_date && e >= a.start_date)
+        const overlapsBooking = bkgs.some(b => s <= b.end_date && e >= b.start_date)
+        return !overlapsAvail && !overlapsBooking
+      })
+      setSelectedWeek(firstAvail >= 0 ? firstAvail : 0);
 
       setLoading(false);
     }
@@ -370,6 +405,15 @@ export default function BoatDetailPage({ params }: PageProps) {
     );
   }
 
+  function weekStatus(p: DbPricing): 'available' | 'option' | 'unavailable' {
+    const s = p.start_date; const e = p.end_date
+    if (bookedSlots.some(b => s <= b.end_date && e >= b.start_date)) return 'unavailable'
+    const block = availability.find(a => s <= a.end_date && e >= a.start_date)
+    if (!block) return 'available'
+    if (block.status === 'option') return 'option'
+    return 'unavailable'
+  }
+
   const supplement = BOAT_SUPPLEMENT[boat.slug] ?? null;
   const curPrice = pricing[selectedWeek] ?? pricing[0];
   const extrasCost =
@@ -380,30 +424,40 @@ export default function BoatDetailPage({ params }: PageProps) {
   const servicePack = 600;
   const total = (curPrice?.weekly_price_eur ?? 0) + servicePack + extrasCost;
 
-  // Month grouping for pricing calendar
+  const todayIso = new Date().toISOString().slice(0, 10);
+
+  // Month grouping for pricing calendar — skip past weeks
   const monthMap: Record<string, Array<DbPricing & { i: number }>> = {};
   pricing.forEach((p, i) => {
+    if (p.end_date < todayIso) return;
     const [year, month] = p.start_date.split('-');
     const key = `${year}-${month}`;
     if (!monthMap[key]) monthMap[key] = [];
     monthMap[key].push({ ...p, i });
   });
 
-  const galleryPaths = photos.map((p) => p.storage_path);
+  const SUPABASE_URL = 'https://eieshihgnevszcsaziyn.supabase.co';
+  function toPublicUrl(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `${SUPABASE_URL}/storage/v1/object/public/boat-photos/${path}`;
+  }
+
+  const galleryPaths = photos.map((p) => toPublicUrl(p.storage_path));
   const heroImg = galleryPaths[activeImg] ?? galleryPaths[0] ?? '';
 
   return (
     <>
       {/* Hero */}
       <div className="nb-boat-hero">
-        <Image
+        {heroImg && <Image
           src={heroImg}
           alt={boat.name}
           fill
           style={{ objectFit: 'cover' }}
           priority
           sizes="100vw"
-        />
+        />}
         <div className="nb-boat-hero-info">
           <div className="breadcrumb" style={{ color: 'rgba(255,255,255,.7)' }}>
             <Link href="/" style={{ color: 'inherit' }}>Ana Sayfa</Link>
@@ -579,40 +633,57 @@ export default function BoatDetailPage({ params }: PageProps) {
                         {monthLabel} {year}&nbsp;<span style={{ fontWeight: 400 }}>| {slots.length} hafta</span>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        {slots.map((slot) => (
-                          <button
-                            key={slot.i}
-                            onClick={() => setSelectedWeek(slot.i)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '10px 14px',
-                              borderRadius: 10,
-                              border: slot.i === selectedWeek ? '2px solid var(--teal)' : '1.5px solid var(--line-2,rgba(11,42,80,.07))',
-                              background: slot.i === selectedWeek ? 'var(--foam,#eef6fa)' : 'var(--card,#fff)',
-                              cursor: 'pointer',
-                              textAlign: 'left',
-                              width: '100%',
-                              transition: 'all .15s',
-                            }}
-                          >
-                            <span style={{ fontSize: 13 }}>{isoToDisplay(slot.start_date)} – {isoToDisplay(slot.end_date)}</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--deep,#13315c)' }}>
-                                €{slot.weekly_price_eur.toLocaleString()}
+                        {slots.map((slot) => {
+                          const ws = weekStatus(slot)
+                          const isUnavail = ws !== 'available'
+                          const isSelected = slot.i === selectedWeek && !isUnavail
+                          return (
+                            <button
+                              key={slot.i}
+                              onClick={() => { if (!isUnavail) setSelectedWeek(slot.i) }}
+                              disabled={isUnavail}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px 14px',
+                                borderRadius: 10,
+                                border: isSelected ? '2px solid var(--teal)' : '1.5px solid var(--line-2,rgba(11,42,80,.07))',
+                                background: isUnavail ? 'rgba(107,114,128,.06)' : isSelected ? 'var(--foam,#eef6fa)' : 'var(--card,#fff)',
+                                cursor: isUnavail ? 'not-allowed' : 'pointer',
+                                textAlign: 'left',
+                                width: '100%',
+                                transition: 'all .15s',
+                                opacity: isUnavail ? 0.65 : 1,
+                              }}
+                            >
+                              <span style={{ fontSize: 13, textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? 'var(--muted)' : 'inherit' }}>
+                                {isoToDisplay(slot.start_date)} – {isoToDisplay(slot.end_date)}
                               </span>
-                              <span style={{
-                                width: 18,
-                                height: 18,
-                                borderRadius: '50%',
-                                border: slot.i === selectedWeek ? '5px solid var(--teal)' : '2px solid var(--line-2,rgba(11,42,80,.12))',
-                                flexShrink: 0,
-                                display: 'inline-block',
-                              }} />
-                            </span>
-                          </button>
-                        ))}
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                {isUnavail ? (
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: ws === 'option' ? '#d97706' : '#6b7280', background: ws === 'option' ? 'rgba(245,158,11,.12)' : 'rgba(107,114,128,.1)', padding: '2px 8px', borderRadius: 6 }}>
+                                    {ws === 'option' ? 'Opsiyonlu' : 'Dolu'}
+                                  </span>
+                                ) : (
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--deep,#13315c)' }}>
+                                    €{slot.weekly_price_eur.toLocaleString()}
+                                  </span>
+                                )}
+                                {!isUnavail && (
+                                  <span style={{
+                                    width: 18,
+                                    height: 18,
+                                    borderRadius: '50%',
+                                    border: isSelected ? '5px solid var(--teal)' : '2px solid var(--line-2,rgba(11,42,80,.12))',
+                                    flexShrink: 0,
+                                    display: 'inline-block',
+                                  }} />
+                                )}
+                              </span>
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   );
@@ -733,9 +804,15 @@ export default function BoatDetailPage({ params }: PageProps) {
                     value={selectedWeek}
                     onChange={(e) => setSelectedWeek(Number(e.target.value))}
                   >
-                    {pricing.map((p, i) => (
-                      <option key={i} value={i}>{isoToDisplay(p.start_date)} – {isoToDisplay(p.end_date)} · €{p.weekly_price_eur.toLocaleString()}</option>
-                    ))}
+                    {pricing.map((p, i) => {
+                      if (p.end_date < todayIso) return null;
+                      const ws = weekStatus(p)
+                      const isUnavail = ws !== 'available'
+                      const label = isUnavail
+                        ? `${isoToDisplay(p.start_date)} – ${isoToDisplay(p.end_date)} · ${ws === 'option' ? 'Opsiyonlu' : 'Dolu'}`
+                        : `${isoToDisplay(p.start_date)} – ${isoToDisplay(p.end_date)} · €${p.weekly_price_eur.toLocaleString()}`
+                      return <option key={i} value={i} disabled={isUnavail}>{label}</option>
+                    })}
                   </select>
                 </div>
                 <div>
@@ -813,7 +890,16 @@ export default function BoatDetailPage({ params }: PageProps) {
               </div>
 
               {/* CTA */}
-              <Link href="/rezervasyon" className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center', marginBottom: 12 }}>
+              {curPrice && weekStatus(curPrice) !== 'available' && (
+                <div style={{ background: 'rgba(107,114,128,.08)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#6b7280', textAlign: 'center', fontWeight: 600 }}>
+                  {weekStatus(curPrice) === 'option' ? 'Bu hafta opsiyonlu — WhatsApp\'tan sorun' : 'Bu hafta dolu — başka bir tarih seçin'}
+                </div>
+              )}
+              <Link
+                href={curPrice && weekStatus(curPrice) === 'available' ? `/rezervasyon?boat=${boat.slug}&start=${curPrice.start_date}&end=${curPrice.end_date}` : '#'}
+                className="btn btn-primary btn-lg"
+                onClick={e => { if (!curPrice || weekStatus(curPrice) !== 'available') e.preventDefault() }}
+                style={{ width: '100%', justifyContent: 'center', marginBottom: 12, opacity: curPrice && weekStatus(curPrice) !== 'available' ? 0.4 : 1, pointerEvents: curPrice && weekStatus(curPrice) !== 'available' ? 'none' : 'auto' }}>
                 Rezervasyona devam →
               </Link>
               <a

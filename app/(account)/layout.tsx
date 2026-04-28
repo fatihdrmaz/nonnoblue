@@ -1,8 +1,12 @@
+import { Nav } from '@/components/Nav';
+import { Footer } from '@/components/Footer';
+
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
-  // TODO: auth guard eklenecek
   return (
-    <div className="min-h-screen">
-      {children}
+    <div className="min-h-full flex flex-col">
+      <Nav />
+      <main className="flex flex-1 flex-col">{children}</main>
+      <Footer />
     </div>
   );
 }
