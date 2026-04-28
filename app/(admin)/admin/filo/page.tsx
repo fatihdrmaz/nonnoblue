@@ -20,6 +20,8 @@ type Boat = {
   max_guests: number | null
   marina: string | null
   deposit_eur: number | null
+  description: string | null
+  description_en: string | null
   active: boolean
   display_order: number
   boat_photos: BoatPhoto[]
@@ -37,6 +39,8 @@ type FormState = {
   max_guests: string
   marina: string
   deposit_eur: string
+  description: string
+  description_en: string
   active: boolean
 }
 
@@ -45,7 +49,7 @@ type EditTab = 'temel' | 'fotograflar' | 'fiyat'
 const EMPTY_FORM: FormState = {
   name: '', slug: '', type: 'Katamaran', model: '', year: '',
   length_m: '', cabins: '', max_guests: '', marina: 'D-Marin Göcek',
-  deposit_eur: '', active: true,
+  deposit_eur: '', description: '', description_en: '', active: true,
 }
 
 const BUCKET = 'boat-photos'
@@ -67,6 +71,7 @@ export default function AdminFiloPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
+  const [descLang, setDescLang] = useState<'tr' | 'en'>('tr')
 
   // Photo state
   const [photos, setPhotos] = useState<BoatPhoto[]>([])
@@ -83,7 +88,7 @@ export default function AdminFiloPage() {
     const supabase = createClient()
     const { data } = await supabase
       .from('boats')
-      .select('id,slug,name,type,brand,model,year,length_m,cabins,max_guests,marina,deposit_eur,active,display_order,boat_photos(id,storage_path,position),boat_pricing(id,start_date,end_date,weekly_price_eur)')
+      .select('id,slug,name,type,brand,model,year,length_m,cabins,max_guests,marina,deposit_eur,description,description_en,active,display_order,boat_photos(id,storage_path,position),boat_pricing(id,start_date,end_date,weekly_price_eur)')
       .order('display_order')
     setBoats((data ?? []) as Boat[])
     setLoading(false)
@@ -117,7 +122,10 @@ export default function AdminFiloPage() {
       model: boat.model ?? '', year: boat.year?.toString() ?? '',
       length_m: boat.length_m?.toString() ?? '', cabins: boat.cabins?.toString() ?? '',
       max_guests: boat.max_guests?.toString() ?? '', marina: boat.marina ?? '',
-      deposit_eur: boat.deposit_eur?.toString() ?? '', active: boat.active,
+      deposit_eur: boat.deposit_eur?.toString() ?? '',
+      description: boat.description ?? '',
+      description_en: boat.description_en ?? '',
+      active: boat.active,
     })
     setPhotos(boat.boat_photos ?? [])
     setPrices(boat.boat_pricing ?? [])
@@ -148,6 +156,8 @@ export default function AdminFiloPage() {
       max_guests: form.max_guests ? parseInt(form.max_guests) : null,
       marina: form.marina || null,
       deposit_eur: form.deposit_eur ? parseInt(form.deposit_eur) : null,
+      description: form.description || null,
+      description_en: form.description_en || null,
       active: form.active,
     }
 
@@ -329,6 +339,38 @@ export default function AdminFiloPage() {
                     </select>
                   </div>
                   <div><label className="label">Depozito (€)</label><input className="input" type="number" value={form.deposit_eur} onChange={e => setForm(p => ({ ...p, deposit_eur: e.target.value }))} /></div>
+                </div>
+
+                {/* Description TR/EN */}
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ display: 'flex', gap: 8, background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 16px', alignItems: 'center', marginBottom: 12 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--mist)', marginRight: 4 }}>Açıklama dili:</span>
+                    {(['tr', 'en'] as const).map(lang => (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => setDescLang(lang)}
+                        style={{
+                          padding: '7px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                          border: '2px solid', borderRadius: 8,
+                          borderColor: descLang === lang ? 'var(--teal)' : 'var(--line)',
+                          background: descLang === lang ? 'var(--teal)' : 'transparent',
+                          color: descLang === lang ? '#fff' : 'var(--mist)',
+                        }}
+                      >
+                        {lang === 'tr' ? '🇹🇷 Türkçe' : '🇬🇧 English'}
+                      </button>
+                    ))}
+                  </div>
+                  <label className="label">{descLang === 'tr' ? 'Tekne Açıklaması (TR)' : 'Boat Description (EN)'}</label>
+                  <textarea
+                    className="input"
+                    rows={4}
+                    style={{ resize: 'vertical', minHeight: 100 }}
+                    value={descLang === 'tr' ? form.description : form.description_en}
+                    onChange={e => setForm(p => ({ ...p, [descLang === 'tr' ? 'description' : 'description_en']: e.target.value }))}
+                    placeholder={descLang === 'tr' ? 'Tekne hakkında Türkçe açıklama...' : 'Boat description in English...'}
+                  />
                 </div>
               </div>
 
