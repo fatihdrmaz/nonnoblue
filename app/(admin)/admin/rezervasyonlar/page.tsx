@@ -58,7 +58,6 @@ export default function AdminRezervasyonlarPage() {
 
   const filtered = bookings.filter(b => {
     const matchFilter = filter === 'all' || b.status === filter
-    const guest = b.profiles?.full_name || b.profiles?.email || ''
     const matchSearch = search === '' ||
       b.code.toLowerCase().includes(search.toLowerCase()) ||
       (b.guest_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
