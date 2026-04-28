@@ -144,7 +144,6 @@ function FleetSection() {
       .select('id,slug,name,type,cabins,max_guests,marina,boat_photos(storage_path,position),boat_pricing(weekly_price_eur)')
       .eq('active', true)
       .order('display_order')
-      .limit(4)
       .then(({ data }) => {
         if (data && data.length > 0) {
           setBoats(data.map((b: any) => {
@@ -170,7 +169,7 @@ function FleetSection() {
             };
           }));
         } else {
-          setBoats((NB_DATA.boats ?? []).slice(0, 4).map((b: any) => ({
+          setBoats((NB_DATA.boats ?? []).map((b: any) => ({
             id: b.id, name: b.name, type: b.type, ribbon: b.ribbon,
             cabins: b.cabins, maxPax: b.maxPax, marina: b.marina,
             badge: b.badge ?? null, img: b.img, priceFrom: b.priceFrom,
