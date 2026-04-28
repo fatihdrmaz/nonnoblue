@@ -45,7 +45,7 @@ export default function AdminRezervasyonlarPage() {
       .select('id,code,status,start_date,end_date,guest_count,total_amount,deposit_amount,balance_amount,guest_name,guest_email,boats(name)')
       .order('created_at', { ascending: false })
       .then(({ data }) => {
-        setBookings((data ?? []) as Booking[])
+        setBookings((data ?? []) as unknown as Booking[])
         setLoading(false)
       })
   }, [])
