@@ -10,6 +10,9 @@ interface BlogPost {
   title: string
   excerpt: string | null
   content: string | null
+  title_en: string | null
+  excerpt_en: string | null
+  content_en: string | null
   img_url: string | null
   category: string | null
   read_time: string | null
@@ -23,6 +26,9 @@ interface FormData {
   slug: string
   excerpt: string
   content: string
+  title_en: string
+  excerpt_en: string
+  content_en: string
   img_url: string
   category: string
   read_time: string
@@ -34,6 +40,9 @@ const EMPTY_FORM: FormData = {
   slug: '',
   excerpt: '',
   content: '',
+  title_en: '',
+  excerpt_en: '',
+  content_en: '',
   img_url: '',
   category: 'Rehber',
   read_time: '',
@@ -193,6 +202,7 @@ export default function AdminBlogPage() {
   const [selected, setSelected] = useState<BlogPost | null>(null)
   const [search, setSearch] = useState('')
   const [form, setForm] = useState<FormData>(EMPTY_FORM)
+  const [langTab, setLangTab] = useState<'tr' | 'en'>('tr')
 
   useEffect(() => { fetchPosts() }, [])
 
@@ -214,6 +224,9 @@ export default function AdminBlogPage() {
       slug: post.slug,
       excerpt: post.excerpt ?? '',
       content: post.content ?? '',
+      title_en: post.title_en ?? '',
+      excerpt_en: post.excerpt_en ?? '',
+      content_en: post.content_en ?? '',
       img_url: post.img_url ?? '',
       category: post.category ?? 'Rehber',
       read_time: post.read_time ?? '',
@@ -245,6 +258,9 @@ export default function AdminBlogPage() {
       slug: form.slug.trim() || toSlug(form.title),
       excerpt: form.excerpt.trim() || null,
       content: form.content.trim() || null,
+      title_en: form.title_en.trim() || null,
+      excerpt_en: form.excerpt_en.trim() || null,
+      content_en: form.content_en.trim() || null,
       img_url: form.img_url.trim() || null,
       category: form.category || null,
       read_time: form.read_time.trim() || null,
@@ -403,20 +419,45 @@ export default function AdminBlogPage() {
         </div>
       )}
 
+      {/* TR / EN Language Tab */}
+      <div style={{ display: 'flex', gap: 8, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 16px', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--mist)', marginRight: 4 }}>İçerik dili:</span>
+        {(['tr', 'en'] as const).map(lang => (
+          <button
+            key={lang}
+            type="button"
+            onClick={() => setLangTab(lang)}
+            style={{
+              padding: '7px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              border: '2px solid', borderRadius: 8,
+              borderColor: langTab === lang ? 'var(--teal)' : 'var(--line)',
+              background: langTab === lang ? 'var(--teal)' : 'transparent',
+              color: langTab === lang ? '#fff' : 'var(--mist)',
+            }}
+          >
+            {lang === 'tr' ? '🇹🇷 Türkçe' : '🇬🇧 English'}
+          </button>
+        ))}
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         <div style={{ ...S.card, padding: 24 }}>
           <p style={S.sectionTitle}>Temel Bilgiler</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Field label="Başlık">
+            <Field label={langTab === 'tr' ? 'Başlık (TR)' : 'Title (EN)'}>
               <input
                 style={S.input}
-                value={form.title}
+                value={langTab === 'tr' ? form.title : form.title_en}
                 onChange={e => {
-                  set('title', e.target.value)
-                  if (!isEdit) set('slug', toSlug(e.target.value))
+                  if (langTab === 'tr') {
+                    set('title', e.target.value)
+                    if (!isEdit) set('slug', toSlug(e.target.value))
+                  } else {
+                    set('title_en', e.target.value)
+                  }
                 }}
-                placeholder="Yazı başlığı"
+                placeholder={langTab === 'tr' ? 'Yazı başlığı' : 'Post title'}
               />
             </Field>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
@@ -442,13 +483,23 @@ export default function AdminBlogPage() {
         </div>
 
         <div style={{ ...S.card, padding: 24 }}>
-          <p style={S.sectionTitle}>İçerik</p>
+          <p style={S.sectionTitle}>{langTab === 'tr' ? 'İçerik (TR)' : 'Content (EN)'}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Field label="Özet (Excerpt)">
-              <textarea style={{ ...S.textarea, minHeight: 72 }} value={form.excerpt} onChange={e => set('excerpt', e.target.value)} placeholder="Kısa özet..." />
+            <Field label={langTab === 'tr' ? 'Özet (Excerpt)' : 'Excerpt (EN)'}>
+              <textarea
+                style={{ ...S.textarea, minHeight: 72 }}
+                value={langTab === 'tr' ? form.excerpt : form.excerpt_en}
+                onChange={e => set(langTab === 'tr' ? 'excerpt' : 'excerpt_en', e.target.value)}
+                placeholder={langTab === 'tr' ? 'Kısa özet...' : 'Short summary...'}
+              />
             </Field>
-            <Field label="İçerik">
-              <textarea style={{ ...S.textarea, minHeight: 200 }} value={form.content} onChange={e => set('content', e.target.value)} placeholder="Yazı içeriği..." />
+            <Field label={langTab === 'tr' ? 'İçerik' : 'Content'}>
+              <textarea
+                style={{ ...S.textarea, minHeight: 200 }}
+                value={langTab === 'tr' ? form.content : form.content_en}
+                onChange={e => set(langTab === 'tr' ? 'content' : 'content_en', e.target.value)}
+                placeholder={langTab === 'tr' ? 'Yazı içeriği...' : 'Post content...'}
+              />
             </Field>
           </div>
         </div>

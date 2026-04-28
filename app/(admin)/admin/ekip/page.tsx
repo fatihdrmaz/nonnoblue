@@ -17,6 +17,8 @@ interface Member {
   name: string
   title: string
   bio: string | null
+  title_en: string | null
+  bio_en: string | null
   avatar_url: string | null
   display_order: number
   active: boolean
@@ -26,6 +28,8 @@ interface FormData {
   name: string
   title: string
   bio: string
+  title_en: string
+  bio_en: string
   avatar_url: string
   display_order: number
   active: boolean
@@ -35,6 +39,8 @@ const EMPTY_FORM: FormData = {
   name: '',
   title: '',
   bio: '',
+  title_en: '',
+  bio_en: '',
   avatar_url: '',
   display_order: 0,
   active: true,
@@ -68,6 +74,7 @@ export default function AdminEkipPage() {
   const [mode, setMode] = useState<'list' | 'edit' | 'add'>('list')
   const [selected, setSelected] = useState<Member | null>(null)
   const [form, setForm] = useState<FormData>(EMPTY_FORM)
+  const [langTab, setLangTab] = useState<'tr' | 'en'>('tr')
 
   useEffect(() => { fetchMembers() }, [])
 
@@ -84,7 +91,7 @@ export default function AdminEkipPage() {
 
   function handleEdit(m: Member) {
     setSelected(m)
-    setForm({ name: m.name, title: m.title, bio: m.bio ?? '', avatar_url: m.avatar_url ?? '', display_order: m.display_order, active: m.active })
+    setForm({ name: m.name, title: m.title, bio: m.bio ?? '', title_en: m.title_en ?? '', bio_en: m.bio_en ?? '', avatar_url: m.avatar_url ?? '', display_order: m.display_order, active: m.active })
     setMode('edit')
   }
 
@@ -111,6 +118,8 @@ export default function AdminEkipPage() {
       name: form.name.trim(),
       title: form.title.trim(),
       bio: form.bio.trim() || null,
+      title_en: form.title_en.trim() || null,
+      bio_en: form.bio_en.trim() || null,
       avatar_url: form.avatar_url.trim() || null,
       display_order: form.display_order,
       active: form.active,
@@ -287,8 +296,8 @@ export default function AdminEkipPage() {
             <Field label="Ad Soyad">
               <input style={S.input} value={form.name} onChange={e => set('name', e.target.value)} placeholder="ör. Mehmet Sarıtaş" />
             </Field>
-            <Field label="Unvan / Görev">
-              <input style={S.input} value={form.title} onChange={e => set('title', e.target.value)} placeholder="ör. Kurucu & Operasyon" />
+            <Field label={langTab === 'tr' ? 'Unvan / Görev (TR)' : 'Title / Role (EN)'}>
+              <input style={S.input} value={langTab === 'tr' ? form.title : form.title_en} onChange={e => set(langTab === 'tr' ? 'title' : 'title_en', e.target.value)} placeholder={langTab === 'tr' ? 'ör. Kurucu & Operasyon' : 'e.g. Founder & Operations'} />
             </Field>
             <Field label="Sıralama">
               <input style={S.input} type="number" min={0} value={form.display_order} onChange={e => set('display_order', Number(e.target.value))} />
@@ -300,8 +309,33 @@ export default function AdminEkipPage() {
               </select>
             </Field>
             <div style={{ gridColumn: '1 / -1' }}>
-              <Field label="Kısa Biyografi (opsiyonel)">
-                <textarea style={S.textarea} value={form.bio} onChange={e => set('bio', e.target.value)} placeholder="Kısa tanıtım metni..." />
+              {/* TR / EN tab */}
+              <div style={{ display: 'flex', gap: 8, background: 'var(--card)', border: '1px solid var(--line,#e5e7eb)', borderRadius: 10, padding: '10px 16px', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--mist,#94a3b8)', marginRight: 4 }}>İçerik dili:</span>
+                {(['tr', 'en'] as const).map(lang => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => setLangTab(lang)}
+                    style={{
+                      padding: '7px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      border: '2px solid', borderRadius: 8,
+                      borderColor: langTab === lang ? 'var(--teal,#0d9488)' : 'var(--line,#e5e7eb)',
+                      background: langTab === lang ? 'var(--teal,#0d9488)' : 'transparent',
+                      color: langTab === lang ? '#fff' : 'var(--mist,#94a3b8)',
+                    }}
+                  >
+                    {lang === 'tr' ? '🇹🇷 Türkçe' : '🇬🇧 English'}
+                  </button>
+                ))}
+              </div>
+              <Field label={langTab === 'tr' ? 'Kısa Biyografi (opsiyonel)' : 'Short Bio (optional)'}>
+                <textarea
+                  style={S.textarea}
+                  value={langTab === 'tr' ? form.bio : form.bio_en}
+                  onChange={e => set(langTab === 'tr' ? 'bio' : 'bio_en', e.target.value)}
+                  placeholder={langTab === 'tr' ? 'Kısa tanıtım metni...' : 'Short introduction...'}
+                />
               </Field>
             </div>
           </div>
