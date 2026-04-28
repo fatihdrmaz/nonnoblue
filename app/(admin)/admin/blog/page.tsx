@@ -1,8 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
+
+const BLOG_BUCKET = 'blog-images'
+
+function getBlogImageUrl(path: string) {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  const supabase = createClient()
+  const { data } = supabase.storage.from(BLOG_BUCKET).getPublicUrl(path)
+  return data.publicUrl
+}
 
 interface BlogPost {
   id: string
@@ -203,6 +213,8 @@ export default function AdminBlogPage() {
   const [search, setSearch] = useState('')
   const [form, setForm] = useState<FormData>(EMPTY_FORM)
   const [langTab, setLangTab] = useState<'tr' | 'en'>('tr')
+  const [uploading, setUploading] = useState(false)
+  const imgInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { fetchPosts() }, [])
 
@@ -246,6 +258,24 @@ export default function AdminBlogPage() {
     const { error } = await supabase.from('blog_posts').delete().eq('id', post.id)
     if (error) { setError(error.message); return }
     setPosts(prev => prev.filter(p => p.id !== post.id))
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const supabase = createClient()
+    const ext = file.name.split('.').pop()
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error: uploadErr } = await supabase.storage.from(BLOG_BUCKET).upload(path, file, { upsert: false })
+    if (uploadErr) {
+      setError('Görsel yüklenemedi: ' + uploadErr.message)
+    } else {
+      const { data } = supabase.storage.from(BLOG_BUCKET).getPublicUrl(path)
+      set('img_url', data.publicUrl)
+    }
+    setUploading(false)
+    if (imgInputRef.current) imgInputRef.current.value = ''
   }
 
   async function handleSave() {
@@ -506,19 +536,39 @@ export default function AdminBlogPage() {
 
         <div style={{ ...S.card, padding: 24 }}>
           <p style={S.sectionTitle}>Görsel</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px', alignItems: 'start' }}>
-            <Field label="Kapak Görsel URL">
+          <input ref={imgInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'end', marginBottom: 16 }}>
+            <Field label="Kapak Görsel URL (veya aşağıdan yükle)">
               <input style={S.input} value={form.img_url} onChange={e => set('img_url', e.target.value)} placeholder="https://..." />
             </Field>
-            {form.img_url && (
-              <div>
-                <label style={S.label}>Önizleme</label>
-                <div style={{ position: 'relative', width: 120, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line, #e5e7eb)' }}>
-                  <Image src={form.img_url} alt="preview" fill style={{ objectFit: 'cover' }} sizes="120px" />
-                </div>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => imgInputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                border: '2px solid var(--teal)', borderRadius: 8,
+                background: 'transparent', color: 'var(--teal)', whiteSpace: 'nowrap',
+                opacity: uploading ? 0.6 : 1,
+              }}
+            >
+              {uploading ? 'Yükleniyor…' : '📁 Dosya seç'}
+            </button>
           </div>
+          {form.img_url && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+              <div style={{ position: 'relative', width: 180, height: 120, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line, #e5e7eb)', flexShrink: 0 }}>
+                <Image src={getBlogImageUrl(form.img_url)} alt="preview" fill style={{ objectFit: 'cover' }} sizes="180px" />
+              </div>
+              <button
+                type="button"
+                onClick={() => set('img_url', '')}
+                style={{ fontSize: 12, color: '#991b1b', background: '#fee2e2', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Görseli kaldır
+              </button>
+            </div>
+          )}
         </div>
 
         <button
