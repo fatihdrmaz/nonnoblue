@@ -90,7 +90,7 @@ export default function HesabimPage() {
       ]);
 
       setProfile(prof as Profile ?? { id: user.id, email: user.email ?? '', full_name: null, phone: null, country: null, role: 'customer', created_at: user.created_at });
-      setBookings((bkgs ?? []) as Booking[]);
+      setBookings((bkgs ?? []) as unknown as Booking[]);
       setProfileForm({
         full_name: prof?.full_name ?? '',
         phone: prof?.phone ?? '',
