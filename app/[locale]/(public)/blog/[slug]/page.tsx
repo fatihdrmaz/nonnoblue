@@ -30,6 +30,7 @@ type RelatedPost = {
   title: string;
   excerpt: string;
   title_en: string | null;
+  excerpt_en: string | null;
   img_url: string;
   category: string;
   read_time: string;
@@ -62,7 +63,7 @@ export default function BlogDetailPage({
 
     supabase
       .from('blog_posts')
-      .select('id, slug, title, excerpt, title_en, img_url, category, read_time')
+      .select('id, slug, title, excerpt, title_en, excerpt_en, img_url, category, read_time')
       .eq('published', true)
       .neq('slug', slug)
       .limit(2)
@@ -416,10 +417,10 @@ export default function BlogDetailPage({
                           marginBottom: 8,
                         }}
                       >
-                        {rel.title}
+                        {locale === 'en' && rel.title_en ? rel.title_en : rel.title}
                       </h3>
                       <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-                        {locale === 'en' && rel.title_en ? rel.title_en : rel.title}
+                        {locale === 'en' && rel.excerpt_en ? rel.excerpt_en : rel.excerpt}
                       </p>
                     </div>
                   </article>
