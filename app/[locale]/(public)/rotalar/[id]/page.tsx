@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -19,6 +19,8 @@ interface Route {
   days: number;
   difficulty: string;
   description: string;
+  title_en: string | null;
+  description_en: string | null;
   highlights: string[];
   img_url: string;
   active: boolean;
@@ -46,6 +48,7 @@ export default function RotaDetayPage({ params }: PageProps) {
   const { id } = use(params);
   const t = useTranslations('routes');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
 
   const [route, setRoute] = useState<Route | null | undefined>(undefined);
   const [boats, setBoats] = useState<Boat[]>([]);
@@ -110,7 +113,7 @@ export default function RotaDetayPage({ params }: PageProps) {
       >
         <Image
           src={route.img_url}
-          alt={route.title}
+          alt={locale === 'en' && route.title_en ? route.title_en : route.title}
           fill
           style={{ objectFit: 'cover' }}
           priority
@@ -141,7 +144,7 @@ export default function RotaDetayPage({ params }: PageProps) {
               <span>/</span>
               <Link href="/rotalar" style={{ color: 'inherit' }}>{t('title')}</Link>
               <span>/</span>
-              <span style={{ color: 'rgba(255,255,255,.9)' }}>{route.title}</span>
+              <span style={{ color: 'rgba(255,255,255,.9)' }}>{locale === 'en' && route.title_en ? route.title_en : route.title}</span>
             </div>
             <div className="eyebrow" style={{ marginBottom: 14 }}>{t('detail_eyebrow')}</div>
             <h1
@@ -155,7 +158,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                 lineHeight: 1.15,
               }}
             >
-              {route.title}
+              {locale === 'en' && route.title_en ? route.title_en : route.title}
             </h1>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <span
@@ -228,7 +231,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                     maxWidth: 640,
                   }}
                 >
-                  {route.description}
+                  {locale === 'en' && route.description_en ? route.description_en : route.description}
                 </p>
               </div>
 
@@ -370,7 +373,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                     lineHeight: 1.3,
                   }}
                 >
-                  {route.title}
+                  {locale === 'en' && route.title_en ? route.title_en : route.title}
                 </h3>
                 <div
                   style={{
@@ -414,7 +417,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                     marginBottom: 28,
                   }}
                 >
-                  Teknelerimizden birini seçerek bu rotayı hemen rezerve edebilir ya da önce bizimle iletişime geçebilirsiniz.
+                  {t('cta_sub')}
                 </div>
 
                 <Link

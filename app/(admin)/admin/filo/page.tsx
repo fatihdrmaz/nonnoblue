@@ -88,7 +88,7 @@ export default function AdminFiloPage() {
     const supabase = createClient()
     const { data } = await supabase
       .from('boats')
-      .select('id,slug,name,type,brand,model,year,length_m,cabins,max_guests,marina,deposit_eur,description,description_en,active,display_order,boat_photos(id,storage_path,position),boat_pricing(id,start_date,end_date,weekly_price_eur)')
+      .select('id,slug,name,type,brand,model,year,length_m,cabins,max_guests,marina,deposit_eur,description_tr,description_en,active,display_order,boat_photos(id,storage_path,position),boat_pricing(id,start_date,end_date,weekly_price_eur)')
       .order('display_order')
     setBoats((data ?? []) as unknown as Boat[])
     setLoading(false)

@@ -166,7 +166,8 @@
     "book_cta": "Bu rotayı rezerve edin",
     "book_cta_sub": "Hemen başlayın — teknenizi seçin, tarihinizi belirleyin ve denize açılın.",
     "book_now_cta": "Rezervasyon Yap →",
-    "other_routes": "Diğer Rotalar"
+    "other_routes": "Diğer Rotalar",
+    "cta_sub": "Teknelerimizden birini seçerek bu rotayı hemen rezerve edebilir ya da önce bizimle iletişime geçebilirsiniz."
   },
   "about": {
     "title": "Hakkımızda",
@@ -462,7 +463,31 @@
     "cta_title": "Hayalinizdeki tekne tatiline başlayın",
     "cta_sub": "Ekibimiz size en uygun charter seçeneğini bulmak için hazır.",
     "cta_btn": "Ücretsiz Teklif Al",
-    "get_price": "Fiyat al"
+    "get_price": "Fiyat al",
+    "c1_tag": "Özgürlük · Macera",
+    "c1_name": "Bareboat Charter",
+    "c1_desc": "Geçerli kaptanlık belgenizle tekneyi kendiniz kullanın. Rotanızı siz belirleyin, koyları siz keşfedin. Maksimum özgürlük, en uygun fiyat.",
+    "c1_price": "€3.500'den / hafta",
+    "c2_tag": "En Çok Tercih Edilen",
+    "c2_name": "Skipperli Charter",
+    "c2_desc": "Deneyimli kaptanımız sizi en güzel koylarla tanıştırsın. Yerel bilgimizle gizli koylara uzanın, siz sadece keyfini çıkarın.",
+    "c2_price": "€4.500'den / hafta",
+    "c3_tag": "VIP Deneyim",
+    "c3_name": "Tam Hizmet Charter",
+    "c3_desc": "Kaptan, hostes ve isteğe bağlı şefle tam otel konforunda bir deniz tatili. Her şey dahil, tüm detaylar bizden.",
+    "c3_price": "€6.500'den / hafta",
+    "e1_name": "Kaptan Temini",
+    "e1_price": "€200 / gün",
+    "e2_name": "Hostes Hizmeti",
+    "e2_price": "€150 / gün",
+    "e3_name": "Transfer",
+    "e3_price": "€60 / yön",
+    "e4_name": "Şef Hizmeti",
+    "e4_price": "€180 / gün",
+    "e5_name": "Dalış Ekipmanı",
+    "e5_price": "€80 / hafta",
+    "e6_name": "Provizyon",
+    "e6_price": "Talebe göre"
   },
   "blog": {
     "title": "Blog",

@@ -250,7 +250,8 @@
     "book_cta": "Book this route",
     "book_cta_sub": "Start now — choose your boat, set your dates and set sail.",
     "book_now_cta": "Book Now →",
-    "other_routes": "Other Routes"
+    "other_routes": "Other Routes",
+    "cta_sub": "You can reserve this route right away by selecting one of our boats, or contact us first."
   },
   "about": {
     "title": "About Us",
@@ -546,7 +547,31 @@
     "cta_title": "Start your dream yacht holiday",
     "cta_sub": "Our team is ready to find the best charter option for you.",
     "cta_btn": "Get a Free Quote",
-    "get_price": "Get quote"
+    "get_price": "Get quote",
+    "c1_tag": "Freedom · Adventure",
+    "c1_name": "Bareboat Charter",
+    "c1_desc": "Sail the boat yourself with a valid skipper's license. Set your own route, discover your own coves. Maximum freedom, best price.",
+    "c1_price": "from €3,500 / week",
+    "c2_tag": "Most Popular",
+    "c2_name": "Skippered Charter",
+    "c2_desc": "Let our experienced captain introduce you to the most beautiful coves. Reach hidden bays with our local knowledge — you just enjoy the ride.",
+    "c2_price": "from €4,500 / week",
+    "c3_tag": "VIP Experience",
+    "c3_name": "Full-Service Charter",
+    "c3_desc": "A sea holiday with full hotel comfort — captain, hostess and optional chef included. All-inclusive, every detail taken care of.",
+    "c3_price": "from €6,500 / week",
+    "e1_name": "Skipper Hire",
+    "e1_price": "€200 / day",
+    "e2_name": "Hostess Service",
+    "e2_price": "€150 / day",
+    "e3_name": "Transfer",
+    "e3_price": "€60 / way",
+    "e4_name": "Chef Service",
+    "e4_price": "€180 / day",
+    "e5_name": "Diving Equipment",
+    "e5_price": "€80 / week",
+    "e6_name": "Provisioning",
+    "e6_price": "On request"
   },
   "blog": {
     "title": "Blog",
