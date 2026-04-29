@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 type BlogPost = {
@@ -12,6 +13,9 @@ type BlogPost = {
   title: string;
   excerpt: string;
   content: string | null;
+  title_en: string | null;
+  excerpt_en: string | null;
+  content_en: string | null;
   img_url: string;
   category: string;
   read_time: string;
@@ -25,6 +29,7 @@ type RelatedPost = {
   slug: string;
   title: string;
   excerpt: string;
+  title_en: string | null;
   img_url: string;
   category: string;
   read_time: string;
@@ -37,6 +42,8 @@ export default function BlogDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
+  const locale = useLocale();
+  const t = useTranslations('blog');
   const [post, setPost] = useState<BlogPost | null | undefined>(undefined);
   const [related, setRelated] = useState<RelatedPost[]>([]);
 
@@ -55,7 +62,7 @@ export default function BlogDetailPage({
 
     supabase
       .from('blog_posts')
-      .select('id, slug, title, excerpt, img_url, category, read_time')
+      .select('id, slug, title, excerpt, title_en, img_url, category, read_time')
       .eq('published', true)
       .neq('slug', slug)
       .limit(2)
@@ -94,15 +101,18 @@ export default function BlogDetailPage({
   if (post === null) notFound();
 
   const formattedDate = post.published_at
-    ? new Date(post.published_at).toLocaleDateString('tr-TR', {
+    ? new Date(post.published_at).toLocaleDateString(locale === 'en' ? 'en-GB' : 'tr-TR', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
       })
     : '';
 
-  const bodyText = post.content ?? post.excerpt;
-  const bodyParagraphs = bodyText
+  const displayTitle = locale === 'en' && post.title_en ? post.title_en : post.title;
+  const displayExcerpt = locale === 'en' && post.excerpt_en ? post.excerpt_en : post.excerpt;
+  const displayContent = locale === 'en' && post.content_en ? post.content_en : (post.content ?? post.excerpt);
+
+  const bodyParagraphs = displayContent
     .split('\n')
     .map((p) => p.trim())
     .filter(Boolean);
@@ -113,7 +123,7 @@ export default function BlogDetailPage({
       <div style={{ position: 'relative', height: 400, background: 'var(--deep)' }}>
         <Image
           src={post.img_url}
-          alt={post.title}
+          alt={displayTitle}
           fill
           priority
           style={{ objectFit: 'cover', opacity: 0.75 }}
@@ -148,11 +158,11 @@ export default function BlogDetailPage({
             }}
           >
             <Link href="/" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'none' }}>
-              Ana Sayfa
+              {t('home')}
             </Link>
             <span style={{ opacity: 0.5 }}>/</span>
             <Link href="/blog" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'none' }}>
-              Blog
+              {t('title')}
             </Link>
             <span style={{ opacity: 0.5 }}>/</span>
             <span
@@ -164,7 +174,7 @@ export default function BlogDetailPage({
                 whiteSpace: 'nowrap',
               }}
             >
-              {post.title}
+              {displayTitle}
             </span>
           </nav>
         </div>
@@ -205,7 +215,7 @@ export default function BlogDetailPage({
             </span>
             <span style={{ fontSize: 13, color: 'var(--muted)' }}>{formattedDate}</span>
             <span style={{ fontSize: 13, color: 'var(--muted)', opacity: 0.5 }}>·</span>
-            <span style={{ fontSize: 13, color: 'var(--muted)' }}>{post.read_time} okuma</span>
+            <span style={{ fontSize: 13, color: 'var(--muted)' }}>{post.read_time} {t('reading')}</span>
           </div>
 
           {/* Title */}
@@ -220,7 +230,7 @@ export default function BlogDetailPage({
               marginBottom: 24,
             }}
           >
-            {post.title}
+            {displayTitle}
           </h1>
 
           {/* Lead / excerpt */}
@@ -234,7 +244,7 @@ export default function BlogDetailPage({
               marginBottom: 40,
             }}
           >
-            {post.excerpt}
+            {displayExcerpt}
           </p>
 
           {/* Body paragraphs */}
@@ -275,7 +285,7 @@ export default function BlogDetailPage({
                 color: 'var(--sky)',
               }}
             >
-              Rezervasyon
+              {t('cta_eyebrow')}
             </p>
             <h3
               style={{
@@ -286,11 +296,10 @@ export default function BlogDetailPage({
                 lineHeight: 1.3,
               }}
             >
-              Tekne Kiralama Hakkında Bilgi Alın
+              {t('cta_title')}
             </h3>
             <p style={{ fontSize: 15, color: 'var(--mist)', lineHeight: 1.6 }}>
-              Sorularınız için ekibimizle iletişime geçin — size en uygun tekne
-              ve rotayı birlikte belirleyelim.
+              {t('cta_body')}
             </p>
             <Link
               href="/iletisim"
@@ -308,7 +317,7 @@ export default function BlogDetailPage({
                 transition: 'background 0.2s ease',
               }}
             >
-              İletişime Geç →
+              {t('cta_btn')}
             </Link>
           </div>
         </article>
@@ -333,7 +342,7 @@ export default function BlogDetailPage({
                 marginBottom: 12,
               }}
             >
-              Daha Fazla
+              {t('more_label')}
             </p>
             <h2
               style={{
@@ -345,7 +354,7 @@ export default function BlogDetailPage({
                 letterSpacing: '-0.01em',
               }}
             >
-              İlgili Yazılar
+              {t('related_title')}
             </h2>
             <div
               style={{
@@ -410,7 +419,7 @@ export default function BlogDetailPage({
                         {rel.title}
                       </h3>
                       <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-                        {rel.read_time} okuma
+                        {locale === 'en' && rel.title_en ? rel.title_en : rel.title}
                       </p>
                     </div>
                   </article>

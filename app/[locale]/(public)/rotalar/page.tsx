@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -13,6 +13,8 @@ interface Route {
   days: number;
   difficulty: string;
   description: string;
+  title_en: string | null;
+  description_en: string | null;
   highlights: string[];
   img_url: string;
 }
@@ -30,6 +32,8 @@ function normalizeMockRoute(r: typeof ROUTES[0]): Route {
     days: r.days,
     difficulty: r.difficulty,
     description: r.desc,
+    title_en: null,
+    description_en: null,
     highlights: r.highlights,
     img_url: r.img,
   };
@@ -37,6 +41,7 @@ function normalizeMockRoute(r: typeof ROUTES[0]): Route {
 
 export default function RotalarPage() {
   const t = useTranslations('routes');
+  const locale = useLocale();
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +49,7 @@ export default function RotalarPage() {
     const supabase = createClient();
     supabase
       .from('routes')
-      .select('id,title,days,difficulty,description,highlights,img_url')
+      .select('id,title,days,difficulty,description,title_en,description_en,highlights,img_url')
       .eq('active', true)
       .order('display_order', { ascending: true })
       .then(({ data }) => {
@@ -89,7 +94,7 @@ export default function RotalarPage() {
           ) : (
             <div className="nb-routes">
               {routes.map((route) => (
-                <RouteCard key={route.id} route={route} t={t} />
+                <RouteCard key={route.id} route={route} t={t} locale={locale} />
               ))}
             </div>
           )}
@@ -119,12 +124,12 @@ export default function RotalarPage() {
   );
 }
 
-function RouteCard({ route, t }: { route: Route; t: ReturnType<typeof useTranslations<'routes'>> }) {
+function RouteCard({ route, t, locale }: { route: Route; t: ReturnType<typeof useTranslations<'routes'>>; locale: string }) {
   return (
     <Link href={`/rotalar/${route.id}`} className="nb-route">
       {route.img_url && <Image
         src={toPublicUrl(route.img_url)}
-        alt={route.title}
+        alt={locale === 'en' && route.title_en ? route.title_en : route.title}
         fill
         style={{ objectFit: 'cover' }}
         sizes="(max-width: 800px) 100vw, 50vw"
@@ -134,9 +139,9 @@ function RouteCard({ route, t }: { route: Route; t: ReturnType<typeof useTransla
           <span>{route.days} {t('day')}</span>
           <span>{route.difficulty}</span>
         </div>
-        <h3>{route.title}</h3>
+        <h3>{locale === 'en' && route.title_en ? route.title_en : route.title}</h3>
         <p style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-          {route.description}
+          {locale === 'en' && route.description_en ? route.description_en : route.description}
         </p>
         {route.highlights?.length > 0 && (
           <div className="nb-route-highlights">

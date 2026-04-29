@@ -10,6 +10,8 @@ interface Route {
   days: number
   difficulty: string
   description: string | null
+  title_en: string | null
+  description_en: string | null
   highlights: string[] | null
   img_url: string | null
   active: boolean
@@ -23,6 +25,8 @@ interface FormData {
   days: number
   difficulty: string
   description: string
+  title_en: string
+  description_en: string
   highlights: string
   img_url: string
   active: boolean
@@ -35,6 +39,8 @@ const EMPTY_FORM: FormData = {
   days: 7,
   difficulty: 'Kolay',
   description: '',
+  title_en: '',
+  description_en: '',
   highlights: '',
   img_url: '',
   active: true,
@@ -206,6 +212,7 @@ export default function AdminRotalarPage() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<'list' | 'edit' | 'add'>('list')
+  const [langTab, setLangTab] = useState<'tr' | 'en'>('tr')
   const [selected, setSelected] = useState<Route | null>(null)
   const [form, setForm] = useState<FormData>(EMPTY_FORM)
 
@@ -225,11 +232,13 @@ export default function AdminRotalarPage() {
   function handleEdit(route: Route) {
     setSelected(route)
     setForm({
-      id: route.id,
       title: route.title,
+      id: route.id,
       days: route.days,
       difficulty: route.difficulty,
       description: route.description ?? '',
+      title_en: route.title_en ?? '',
+      description_en: route.description_en ?? '',
       highlights: (route.highlights ?? []).join('\n'),
       img_url: route.img_url ?? '',
       active: route.active,
@@ -256,17 +265,16 @@ export default function AdminRotalarPage() {
     setSaving(true)
     setError(null)
 
-    const highlightsArr = form.highlights
-      .split('\n')
-      .map(s => s.trim())
-      .filter(Boolean)
-
     const payload = {
       title: form.title.trim(),
       days: form.days,
       difficulty: form.difficulty,
       description: form.description.trim() || null,
-      highlights: highlightsArr.length > 0 ? highlightsArr : null,
+      title_en: form.title_en.trim() || null,
+      description_en: form.description_en.trim() || null,
+      highlights: form.highlights.trim()
+        ? form.highlights.split('\n').map(s => s.trim()).filter(Boolean)
+        : null,
       img_url: form.img_url.trim() || null,
       active: form.active,
       display_order: form.display_order,
@@ -429,18 +437,41 @@ export default function AdminRotalarPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
+        {/* TR / EN Tab */}
+        <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--line, #e5e7eb)', marginBottom: 4 }}>
+          {(['tr', 'en'] as const).map(lang => (
+            <button
+              key={lang}
+              type="button"
+              onClick={() => setLangTab(lang)}
+              style={{
+                padding: '8px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                border: 'none', background: 'transparent', textTransform: 'uppercase', letterSpacing: '0.08em',
+                borderBottom: langTab === lang ? '2px solid var(--teal, #0d9488)' : '2px solid transparent',
+                color: langTab === lang ? 'var(--teal, #0d9488)' : 'var(--muted, #94a3b8)', marginBottom: -2,
+              }}
+            >
+              {lang === 'tr' ? '🇹🇷 Türkçe' : '🇬🇧 English'}
+            </button>
+          ))}
+        </div>
+
         <div style={{ ...S.card, padding: 24 }}>
           <p style={S.sectionTitle}>Temel Bilgiler</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
-            <Field label="Rota Adı">
+            <Field label={langTab === 'tr' ? 'Rota Adı (TR)' : 'Route Name (EN)'}>
               <input
                 style={S.input}
-                value={form.title}
+                value={langTab === 'tr' ? form.title : form.title_en}
                 onChange={e => {
-                  set('title', e.target.value)
-                  if (!isEdit) set('id', toId(e.target.value))
+                  if (langTab === 'tr') {
+                    set('title', e.target.value)
+                    if (!isEdit) set('id', toId(e.target.value))
+                  } else {
+                    set('title_en', e.target.value)
+                  }
                 }}
-                placeholder="ör. Göcek – Fethiye Körfezi"
+                placeholder={langTab === 'tr' ? 'ör. Göcek – Fethiye Körfezi' : 'e.g. Göcek – Fethiye Bay'}
               />
             </Field>
             <Field label="ID (URL)">
@@ -469,8 +500,13 @@ export default function AdminRotalarPage() {
         <div style={{ ...S.card, padding: 24 }}>
           <p style={S.sectionTitle}>Açıklama ve Güzergah</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Field label="Açıklama">
-              <textarea style={{ ...S.textarea, minHeight: 100 }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Rota açıklaması..." />
+            <Field label={langTab === 'tr' ? 'Açıklama (TR)' : 'Description (EN)'}>
+              <textarea
+                style={{ ...S.textarea, minHeight: 100 }}
+                value={langTab === 'tr' ? form.description : form.description_en}
+                onChange={e => set(langTab === 'tr' ? 'description' : 'description_en', e.target.value)}
+                placeholder={langTab === 'tr' ? 'Rota açıklaması...' : 'Route description...'}
+              />
             </Field>
             <Field label="Güzergah Noktaları (her satıra bir nokta)">
               <textarea

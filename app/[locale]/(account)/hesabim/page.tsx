@@ -117,7 +117,7 @@ export default function HesabimPage() {
     if (user) {
       await supabase.from('profiles').update(profileForm).eq('id', user.id);
       setProfile(prev => prev ? { ...prev, ...profileForm } : prev);
-      setSaveMsg('Kaydedildi');
+      setSaveMsg(t('saved'));
       setTimeout(() => setSaveMsg(''), 2000);
     }
     setSaving(false);
@@ -175,7 +175,7 @@ export default function HesabimPage() {
                 </div>
                 <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>{profile?.email}</div>
                 {joinedDate && (
-                  <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 4 }}>Üyelik: {joinedDate}</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 4 }}>{t('membership')}: {joinedDate}</div>
                 )}
               </div>
 

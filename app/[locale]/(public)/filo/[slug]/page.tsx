@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -189,6 +189,7 @@ type DbBoat = {
   marina: string;
   deposit_eur: number;
   description_tr: string;
+  description_en: string | null;
   features: string[] | null;
   active: boolean;
   display_order: number;
@@ -263,6 +264,7 @@ function isoToDisplay(iso: string): string {
 export default function BoatDetailPage() {
   const params = useParams<{ slug: string }>();
   const t = useTranslations('boat');
+  const locale = useLocale();
 
   const [boat, setBoat] = useState<DbBoat | null>(null);
   const [photos, setPhotos] = useState<DbPhoto[]>([]);
@@ -508,7 +510,7 @@ export default function BoatDetailPage() {
                 {boat.name} — {boat.model}
               </h2>
               <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--muted,#6b7f9e)', maxWidth: 640 }}>
-                {boat.description_tr || `${boat.type} katamaran filosumuzun prestijli üyesi ${boat.name}, ${boat.year} yılına ait ${boat.model} modeli ile konfor ve performansı bir arada sunuyor. ${boat.cabins} kabin, ${boat.max_guests} kişi kapasitesi ve ${boat.marina} marinasındaki konumuyla unutulmaz bir Ege tatilinin adresi.`}
+                {(locale === 'en' && boat.description_en ? boat.description_en : boat.description_tr) || `${boat.type} katamaran filosumuzun prestijli üyesi ${boat.name}, ${boat.year} yılına ait ${boat.model} modeli ile konfor ve performansı bir arada sunuyor. ${boat.cabins} kabin, ${boat.max_guests} kişi kapasitesi ve ${boat.marina} marinasındaki konumuyla unutulmaz bir Ege tatilinin adresi.`}
               </p>
             </div>
 

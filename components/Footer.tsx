@@ -66,7 +66,7 @@ export function Footer() {
             Fethiye / Muğla
           </p>
           <p style={{ color: 'rgba(255,255,255,.55)', fontSize: 12, marginTop: 8 }}>
-            Hafta içi 09:00 – 17:00 · Pazar kapalı
+            {t('office_hours_text')}
           </p>
         </div>
       </div>

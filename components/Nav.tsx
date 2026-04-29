@@ -59,7 +59,7 @@ export function Nav() {
       <header className="nb-nav" data-transparent={transparent ? 'true' : 'false'}>
         <div className="container nb-nav-inner">
           <Link href="/" className="nb-nav-logo" onClick={() => setMenuOpen(false)}>
-            <Logo invert={transparent} height={32} />
+            <Logo invert={transparent} height={38} />
           </Link>
 
           <nav className="nb-nav-links">

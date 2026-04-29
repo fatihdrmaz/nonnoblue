@@ -1,16 +1,16 @@
 'use client';
 
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-const STATS = [
-  { value: '4', label: 'Katamaran' },
-  { value: '2021+', label: 'Model yılı' },
-  { value: '200+', label: 'Mutlu misafir' },
-  { value: '5', label: 'Yıllık deneyim' },
-];
+const STAT_KEYS = [
+  { value: '4', key: 'stat_fleet' },
+  { value: '2021+', key: 'stat_model' },
+  { value: '200+', key: 'stat_guests' },
+  { value: '5', key: 'stat_experience' },
+] as const;
 
 const SUPABASE_STORAGE = 'https://eieshihgnevszcsaziyn.supabase.co/storage/v1/object/public/team-photos';
 
@@ -25,52 +25,44 @@ interface TeamMember {
   name: string;
   title: string;
   bio: string | null;
+  title_en: string | null;
+  bio_en: string | null;
   avatar_url: string | null;
   display_order: number;
 }
 
-const VALUES = [
-  {
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-      </svg>
-    ),
-    title: 'Misafir odaklı',
-    desc: 'Her sezon başı sizi tanır, tatilinizi birlikte planlarız. Standart checklist\'lerden uzağız.',
-  },
-  {
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="5" r="3"/>
-        <line x1="12" y1="22" x2="12" y2="8"/>
-        <path d="M5 12H2a10 10 0 0 0 20 0h-3"/>
-      </svg>
-    ),
-    title: 'Teknik güvence',
-    desc: 'Her çıkış öncesi 40 maddelik teknik kontrol. Sezon başı tam bakım.',
-  },
-  {
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
-      </svg>
-    ),
-    title: 'Yerel bilgi',
-    desc: 'Göcek\'te doğduk, burada yaşıyoruz. Hangi koyun ne zaman boş olduğunu biliyoruz.',
-  },
+const VALUES_ICONS = [
+  (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  ),
+  (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="5" r="3"/>
+      <line x1="12" y1="22" x2="12" y2="8"/>
+      <path d="M5 12H2a10 10 0 0 0 20 0h-3"/>
+    </svg>
+  ),
+  (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+    </svg>
+  ),
 ];
+const VALUES_KEYS = ['value1', 'value2', 'value3'] as const;
 
 export default function HakkimizdaPage() {
   const t = useTranslations('about');
+  const locale = useLocale();
   const [team, setTeam] = useState<TeamMember[]>([]);
 
   useEffect(() => {
     const supabase = createClient();
     supabase
       .from('team_members')
-      .select('id,name,title,bio,avatar_url,display_order')
+      .select('id,name,title,bio,title_en,bio_en,avatar_url,display_order')
       .eq('active', true)
       .order('display_order', { ascending: true })
       .then(({ data }) => {
@@ -102,10 +94,10 @@ export default function HakkimizdaPage() {
       <section className="nb-stats">
         <div className="container">
           <div className="nb-stats-grid">
-            {STATS.map((s) => (
-              <div key={s.label}>
+            {STAT_KEYS.map((s) => (
+              <div key={s.key}>
                 <div className="nb-stat-num">{s.value}</div>
-                <div className="nb-stat-lab">{s.label}</div>
+                <div className="nb-stat-lab">{t(s.key)}</div>
               </div>
             ))}
           </div>
@@ -163,11 +155,11 @@ export default function HakkimizdaPage() {
             </h2>
           </div>
           <div className="nb-features">
-            {VALUES.map((v) => (
-              <div key={v.title} className="nb-feature">
-                <div className="nb-feature-icon">{v.icon}</div>
-                <h3>{v.title}</h3>
-                <p>{v.desc}</p>
+            {VALUES_KEYS.map((key, i) => (
+              <div key={key} className="nb-feature">
+                <div className="nb-feature-icon">{VALUES_ICONS[i]}</div>
+                <h3>{t(`${key}_title`)}</h3>
+                <p>{t(`${key}_desc`)}</p>
               </div>
             ))}
           </div>
@@ -201,8 +193,8 @@ export default function HakkimizdaPage() {
                   )}
                 </div>
                 <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>{member.name}</div>
-                <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 3 }}>{member.title}</div>
-                {member.bio && <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6, lineHeight: 1.5 }}>{member.bio}</div>}
+                <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 3 }}>{locale === 'en' && member.title_en ? member.title_en : member.title}</div>
+                {(member.bio || member.bio_en) && <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6, lineHeight: 1.5 }}>{locale === 'en' && member.bio_en ? member.bio_en : member.bio}</div>}
               </div>
             ))}
           </div>

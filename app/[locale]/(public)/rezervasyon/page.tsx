@@ -250,13 +250,13 @@ function RezervasyonForm() {
                   <div>
                     <label htmlFor="rota" style={labelStyle}>{t('route')} <span style={{ fontSize: 11, fontWeight: 400, textTransform: 'none' }}>{t('route_optional')}</span></label>
                     <select id="rota" name="rota" value={form.rota} onChange={handleChange} style={selectStyle(false)}>
-                      <option value="">Rota seçin…</option>
+                      <option value="">{t('select_route_opt')}</option>
                       {routes.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
                     </select>
                   </div>
 
                   <div>
-                    <p style={labelStyle}>Charter Tipi <span style={{ color: '#e53e3e' }}>*</span></p>
+                    <p style={labelStyle}>{t('charter_type')} <span style={{ color: '#e53e3e' }}>*</span></p>
                     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                       {[{ value: 'bareboat', label: 'Bareboat' }, { value: 'skipperli', label: 'Skipperli' }, { value: 'tam-hizmet', label: 'Tam Hizmet' }].map(opt => (
                         <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', border: `1.5px solid ${form.charterTipi === opt.value ? 'var(--teal)' : errors.charterTipi ? '#e53e3e' : 'var(--line)'}`, borderRadius: 'var(--radius-sm)', cursor: 'pointer', background: form.charterTipi === opt.value ? 'var(--foam)' : 'transparent', fontSize: 14, fontWeight: 600, color: form.charterTipi === opt.value ? 'var(--teal)' : 'var(--ink)' }}>
@@ -265,7 +265,7 @@ function RezervasyonForm() {
                         </label>
                       ))}
                     </div>
-                    {errors.charterTipi && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>Lütfen charter tipini seçin.</p>}
+                    {errors.charterTipi && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>{t('error_charter')}</p>}
                   </div>
                 </div>
 
@@ -274,33 +274,33 @@ function RezervasyonForm() {
                 {/* Section 2 */}
                 <p style={sectionTitleStyle}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'var(--teal)', color: '#fff', fontSize: 12, fontWeight: 800 }}>2</span>
-                  Tarih &amp; Kişi
+                  {t('section_date_guests')}
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div>
-                      <label htmlFor="baslangicTarihi" style={labelStyle}>Başlangıç Tarihi <span style={{ color: '#e53e3e' }}>*</span></label>
+                      <label htmlFor="baslangicTarihi" style={labelStyle}>{t('start_date')} <span style={{ color: '#e53e3e' }}>*</span></label>
                       <input id="baslangicTarihi" name="baslangicTarihi" type="date" value={form.baslangicTarihi} onChange={handleChange} style={inputStyle(!!errors.baslangicTarihi)} min={new Date().toISOString().split('T')[0]} />
-                      {errors.baslangicTarihi && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>Tarih gerekli.</p>}
+                      {errors.baslangicTarihi && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>{t('error_date')}</p>}
                     </div>
                     <div>
-                      <label htmlFor="bitisTarihi" style={labelStyle}>Bitiş Tarihi <span style={{ color: '#e53e3e' }}>*</span></label>
+                      <label htmlFor="bitisTarihi" style={labelStyle}>{t('end_date')} <span style={{ color: '#e53e3e' }}>*</span></label>
                       <input id="bitisTarihi" name="bitisTarihi" type="date" value={form.bitisTarihi} onChange={handleChange} style={inputStyle(!!errors.bitisTarihi)} min={form.baslangicTarihi || new Date().toISOString().split('T')[0]} />
-                      {errors.bitisTarihi && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>Tarih gerekli.</p>}
+                      {errors.bitisTarihi && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>{t('error_date')}</p>}
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'end' }}>
                     <div>
-                      <label htmlFor="kisiSayisi" style={labelStyle}>Kişi Sayısı <span style={{ color: '#e53e3e' }}>*</span></label>
+                      <label htmlFor="kisiSayisi" style={labelStyle}>{t('guests')} <span style={{ color: '#e53e3e' }}>*</span></label>
                       <input id="kisiSayisi" name="kisiSayisi" type="number" min={1} max={12} value={form.kisiSayisi} onChange={handleChange} placeholder="1 – 12" style={inputStyle(!!errors.kisiSayisi)} />
-                      {errors.kisiSayisi && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>Kişi sayısı gerekli.</p>}
+                      {errors.kisiSayisi && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>{t('error_guests')}</p>}
                     </div>
                     <div style={{ paddingBottom: 2 }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}>
                         <input type="checkbox" name="istegeKaptan" checked={form.istegeKaptan} onChange={handleChange} style={{ width: 18, height: 18, accentColor: 'var(--teal)', cursor: 'pointer' }} />
-                        İsteğe bağlı kaptan
+                        {t('captain_optional')}
                       </label>
                       <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, paddingLeft: 28 }}>+€160–200 / gün</p>
                     </div>
@@ -312,39 +312,39 @@ function RezervasyonForm() {
                 {/* Section 3 */}
                 <p style={sectionTitleStyle}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'var(--teal)', color: '#fff', fontSize: 12, fontWeight: 800 }}>3</span>
-                  İletişim
+                  {t('section_contact')}
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   <div>
-                    <label htmlFor="adSoyad" style={labelStyle}>Ad Soyad <span style={{ color: '#e53e3e' }}>*</span></label>
-                    <input id="adSoyad" name="adSoyad" type="text" value={form.adSoyad} onChange={handleChange} placeholder="Adınız ve soyadınız" style={inputStyle(!!errors.adSoyad)} />
-                    {errors.adSoyad && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>Ad soyad gerekli.</p>}
+                    <label htmlFor="adSoyad" style={labelStyle}>{t('name')} <span style={{ color: '#e53e3e' }}>*</span></label>
+                    <input id="adSoyad" name="adSoyad" type="text" value={form.adSoyad} onChange={handleChange} placeholder={t('placeholder_name')} style={inputStyle(!!errors.adSoyad)} />
+                    {errors.adSoyad && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>{t('error_name')}</p>}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div>
-                      <label htmlFor="eposta" style={labelStyle}>E-posta <span style={{ color: '#e53e3e' }}>*</span></label>
+                      <label htmlFor="eposta" style={labelStyle}>{t('email')} <span style={{ color: '#e53e3e' }}>*</span></label>
                       <input id="eposta" name="eposta" type="email" value={form.eposta} onChange={handleChange} placeholder="ornek@email.com" style={inputStyle(!!errors.eposta)} />
-                      {errors.eposta && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>E-posta gerekli.</p>}
+                      {errors.eposta && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>{t('error_email')}</p>}
                     </div>
                     <div>
-                      <label htmlFor="telefon" style={labelStyle}>Telefon <span style={{ color: '#e53e3e' }}>*</span></label>
+                      <label htmlFor="telefon" style={labelStyle}>{t('phone')} <span style={{ color: '#e53e3e' }}>*</span></label>
                       <input id="telefon" name="telefon" type="tel" value={form.telefon} onChange={handleChange} placeholder="+90 5xx xxx xx xx" style={inputStyle(!!errors.telefon)} />
-                      {errors.telefon && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>Telefon gerekli.</p>}
+                      {errors.telefon && <p style={{ fontSize: 12, color: '#e53e3e', marginTop: 4 }}>{t('error_phone')}</p>}
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="ozelIstekler" style={labelStyle}>Özel İstekler</label>
-                    <textarea id="ozelIstekler" name="ozelIstekler" rows={4} value={form.ozelIstekler} onChange={handleChange} placeholder="Özel istekleriniz, sorularınız veya notlarınız…" style={{ ...inputStyle(false), resize: 'vertical' }} />
+                    <label htmlFor="ozelIstekler" style={labelStyle}>{t('special_requests')}</label>
+                    <textarea id="ozelIstekler" name="ozelIstekler" rows={4} value={form.ozelIstekler} onChange={handleChange} placeholder={t('placeholder_notes')} style={{ ...inputStyle(false), resize: 'vertical' }} />
                   </div>
                 </div>
 
                 <div style={{ marginTop: 36 }}>
                   <button type="submit" disabled={submitting} style={{ width: '100%', background: submitting ? 'var(--muted)' : 'var(--teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '16px 28px', fontSize: 16, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', letterSpacing: '0.02em' }}>
-                    {submitting ? 'Gönderiliyor…' : 'Teklif İste'}
+                    {submitting ? t('sending') : t('submit_btn')}
                   </button>
                   <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)', marginTop: 12 }}>
-                    Formunuz incelendikten sonra 24 saat içinde size dönüş yapılacaktır.
+                    {t('form_note')}
                   </p>
                 </div>
               </form>
