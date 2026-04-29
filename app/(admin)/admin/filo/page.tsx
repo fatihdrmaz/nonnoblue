@@ -20,7 +20,7 @@ type Boat = {
   max_guests: number | null
   marina: string | null
   deposit_eur: number | null
-  description: string | null
+  description_tr: string | null
   description_en: string | null
   active: boolean
   display_order: number
@@ -39,7 +39,7 @@ type FormState = {
   max_guests: string
   marina: string
   deposit_eur: string
-  description: string
+  description_tr: string
   description_en: string
   active: boolean
 }
@@ -49,7 +49,7 @@ type EditTab = 'temel' | 'fotograflar' | 'fiyat'
 const EMPTY_FORM: FormState = {
   name: '', slug: '', type: 'Katamaran', model: '', year: '',
   length_m: '', cabins: '', max_guests: '', marina: 'D-Marin Göcek',
-  deposit_eur: '', description: '', description_en: '', active: true,
+  deposit_eur: '', description_tr: '', description_en: '', active: true,
 }
 
 const BUCKET = 'boat-photos'
@@ -90,7 +90,7 @@ export default function AdminFiloPage() {
       .from('boats')
       .select('id,slug,name,type,brand,model,year,length_m,cabins,max_guests,marina,deposit_eur,description,description_en,active,display_order,boat_photos(id,storage_path,position),boat_pricing(id,start_date,end_date,weekly_price_eur)')
       .order('display_order')
-    setBoats((data ?? []) as Boat[])
+    setBoats((data ?? []) as unknown as Boat[])
     setLoading(false)
   }
 
@@ -123,7 +123,7 @@ export default function AdminFiloPage() {
       length_m: boat.length_m?.toString() ?? '', cabins: boat.cabins?.toString() ?? '',
       max_guests: boat.max_guests?.toString() ?? '', marina: boat.marina ?? '',
       deposit_eur: boat.deposit_eur?.toString() ?? '',
-      description: boat.description ?? '',
+      description_tr: boat.description_tr ?? '',
       description_en: boat.description_en ?? '',
       active: boat.active,
     })
@@ -156,7 +156,7 @@ export default function AdminFiloPage() {
       max_guests: form.max_guests ? parseInt(form.max_guests) : null,
       marina: form.marina || null,
       deposit_eur: form.deposit_eur ? parseInt(form.deposit_eur) : null,
-      description: form.description || null,
+      description_tr: form.description_tr || null,
       description_en: form.description_en || null,
       active: form.active,
     }
@@ -367,8 +367,8 @@ export default function AdminFiloPage() {
                     className="input"
                     rows={4}
                     style={{ resize: 'vertical', minHeight: 100 }}
-                    value={descLang === 'tr' ? form.description : form.description_en}
-                    onChange={e => setForm(p => ({ ...p, [descLang === 'tr' ? 'description' : 'description_en']: e.target.value }))}
+                    value={descLang === 'tr' ? form.description_tr : form.description_en}
+                    onChange={e => setForm(p => ({ ...p, [descLang === 'tr' ? 'description_tr' : 'description_en']: e.target.value }))}
                     placeholder={descLang === 'tr' ? 'Tekne hakkında Türkçe açıklama...' : 'Boat description in English...'}
                   />
                 </div>
