@@ -7,6 +7,23 @@ import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { BLOG_POSTS } from '@/data/mock';
 
+const CATEGORY_EN: Record<string, string> = {
+  'Rehber': 'Guide',
+  'Rota Rehberi': 'Route Guide',
+  'Tekne İnceleme': 'Boat Review',
+  'Haber': 'News',
+  'İpuçları': 'Tips',
+};
+
+function localizeCategory(cat: string, locale: string) {
+  return locale === 'en' ? (CATEGORY_EN[cat] ?? cat) : cat;
+}
+
+function localizeReadTime(rt: string, locale: string) {
+  if (locale !== 'en') return rt;
+  return rt.replace('dk', 'min');
+}
+
 type BlogPost = {
   id: string;
   slug: string;
@@ -127,13 +144,13 @@ function BlogCard({ post, locale }: { post: BlogPost; locale: string }) {
           textTransform: 'uppercase',
           zIndex: 1,
         }}>
-          {post.category}
+          {localizeCategory(post.category, locale)}
         </span>
       </div>
       <div className="nb-blog-meta">
         <span>{post.published_at}</span>
         <span>·</span>
-        <span>{post.read_time}</span>
+        <span>{localizeReadTime(post.read_time, locale)}</span>
       </div>
       <h3>{displayTitle}</h3>
       <p>{displayExcerpt}</p>

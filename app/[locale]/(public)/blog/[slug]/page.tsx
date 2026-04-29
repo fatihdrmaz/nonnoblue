@@ -7,6 +7,23 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 
+const CATEGORY_EN: Record<string, string> = {
+  'Rehber': 'Guide',
+  'Rota Rehberi': 'Route Guide',
+  'Tekne İnceleme': 'Boat Review',
+  'Haber': 'News',
+  'İpuçları': 'Tips',
+};
+
+function localizeCategory(cat: string, locale: string) {
+  return locale === 'en' ? (CATEGORY_EN[cat] ?? cat) : cat;
+}
+
+function localizeReadTime(rt: string, locale: string) {
+  if (locale !== 'en') return rt;
+  return rt.replace('dk', 'min');
+}
+
 type BlogPost = {
   id: string;
   slug: string;
@@ -212,11 +229,11 @@ export default function BlogDetailPage({
                 textTransform: 'uppercase',
               }}
             >
-              {post.category}
+              {localizeCategory(post.category, locale)}
             </span>
             <span style={{ fontSize: 13, color: 'var(--muted)' }}>{formattedDate}</span>
             <span style={{ fontSize: 13, color: 'var(--muted)', opacity: 0.5 }}>·</span>
-            <span style={{ fontSize: 13, color: 'var(--muted)' }}>{post.read_time} {t('reading')}</span>
+            <span style={{ fontSize: 13, color: 'var(--muted)' }}>{localizeReadTime(post.read_time, locale)} {t('reading')}</span>
           </div>
 
           {/* Title */}
@@ -405,7 +422,7 @@ export default function BlogDetailPage({
                           marginBottom: 6,
                         }}
                       >
-                        {rel.category}
+                        {localizeCategory(rel.category, locale)}
                       </span>
                       <h3
                         style={{

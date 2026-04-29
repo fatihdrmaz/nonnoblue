@@ -7,6 +7,16 @@ import { Link } from '@/i18n/navigation';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
+const DIFFICULTY_EN: Record<string, string> = {
+  'Kolay': 'Easy',
+  'Orta': 'Moderate',
+  'Zor': 'Challenging',
+};
+
+function localizeDifficulty(d: string, locale: string) {
+  return locale === 'en' ? (DIFFICULTY_EN[d] ?? d) : d;
+}
+
 function toPublicUrl(path: string): string {
   if (!path) return '';
   if (path.startsWith('http')) return path;
@@ -186,7 +196,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                   letterSpacing: '0.05em',
                 }}
               >
-                {route.difficulty}
+                {localizeDifficulty(route.difficulty, locale)}
               </span>
             </div>
           </div>
@@ -318,7 +328,7 @@ export default function RotaDetayPage({ params }: PageProps) {
               >
                 {[
                   { label: t('duration_label'), value: `${route.days} ${t('day')}` },
-                  { label: t('difficulty_label'), value: route.difficulty },
+                  { label: t('difficulty_label'), value: localizeDifficulty(route.difficulty, locale) },
                   { label: t('stops'), value: `${route.highlights.length} ${t('stops_count')}` },
                 ].map((stat) => (
                   <div key={stat.label} style={{ textAlign: 'center' }}>
@@ -405,7 +415,7 @@ export default function RotaDetayPage({ params }: PageProps) {
                       borderRadius: 8,
                     }}
                   >
-                    {route.difficulty}
+                    {localizeDifficulty(route.difficulty, locale)}
                   </span>
                 </div>
 

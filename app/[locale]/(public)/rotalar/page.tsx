@@ -7,6 +7,16 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/data/mock';
 
+const DIFFICULTY_EN: Record<string, string> = {
+  'Kolay': 'Easy',
+  'Orta': 'Moderate',
+  'Zor': 'Challenging',
+};
+
+function localizeDifficulty(d: string, locale: string) {
+  return locale === 'en' ? (DIFFICULTY_EN[d] ?? d) : d;
+}
+
 interface Route {
   id: string;
   title: string;
@@ -137,7 +147,7 @@ function RouteCard({ route, t, locale }: { route: Route; t: ReturnType<typeof us
       <div className="nb-route-body">
         <div className="nb-route-chips">
           <span>{route.days} {t('day')}</span>
-          <span>{route.difficulty}</span>
+          <span>{localizeDifficulty(route.difficulty, locale)}</span>
         </div>
         <h3>{locale === 'en' && route.title_en ? route.title_en : route.title}</h3>
         <p style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
