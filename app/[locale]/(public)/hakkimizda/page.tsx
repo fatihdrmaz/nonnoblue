@@ -6,10 +6,11 @@ import { Link } from '@/i18n/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 const STAT_KEYS = [
-  { value: '4', key: 'stat_fleet' },
-  { value: '2021+', key: 'stat_model' },
-  { value: '200+', key: 'stat_guests' },
-  { value: '5', key: 'stat_experience' },
+  { value: '4', key: 'stat_catamaran' },
+  { value: '1', key: 'stat_trawler' },
+  { value: '1', key: 'stat_speedboat' },
+  { value: '1000+', key: 'stat_guests' },
+  { value: '4.9/5', key: 'stat_rating' },
 ] as const;
 
 const SUPABASE_STORAGE = 'https://eieshihgnevszcsaziyn.supabase.co/storage/v1/object/public/team-photos';

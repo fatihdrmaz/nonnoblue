@@ -321,10 +321,11 @@ button:disabled {
 
 /* ===== Stats strip ===== */
 .nb-stats { background: var(--deep); color: #fff; padding: 40px 0; }
-.nb-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; align-items: center; }
+.nb-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; align-items: center; }
 .nb-stat-num { font-family: var(--f-display); font-size: 48px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; margin-bottom: 6px; }
 .nb-stat-lab { font-size: 13px; color: rgba(255,255,255,.7); letter-spacing: 0.08em; text-transform: uppercase; }
-@media (max-width: 700px) { .nb-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 28px; } .nb-stat-num { font-size: 36px; } }
+@media (max-width: 900px) { .nb-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 28px; } }
+@media (max-width: 600px) { .nb-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; } .nb-stat-num { font-size: 36px; } }
 
 /* ===== Feature grid ===== */
 .nb-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }

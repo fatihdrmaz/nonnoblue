@@ -126,10 +126,11 @@ function StatsStrip() {
     <section className="nb-stats">
       <div className="container">
         <div className="nb-stats-grid">
-          <div><div className="nb-stat-num">4</div><div className="nb-stat-lab">{t('stats_boats')}</div></div>
-          <div><div className="nb-stat-num">6+</div><div className="nb-stat-lab">{t('stats_experience')}</div></div>
-          <div><div className="nb-stat-num">240+</div><div className="nb-stat-lab">{t('stats_guests')}</div></div>
-          <div><div className="nb-stat-num">4.9</div><div className="nb-stat-lab">{t('stats_rating')}</div></div>
+          <div><div className="nb-stat-num">4</div><div className="nb-stat-lab">{t('stats_catamaran')}</div></div>
+          <div><div className="nb-stat-num">1</div><div className="nb-stat-lab">{t('stats_trawler')}</div></div>
+          <div><div className="nb-stat-num">1</div><div className="nb-stat-lab">{t('stats_speedboat')}</div></div>
+          <div><div className="nb-stat-num">1000+</div><div className="nb-stat-lab">{t('stats_guests')}</div></div>
+          <div><div className="nb-stat-num">4.9/5</div><div className="nb-stat-lab">{t('stats_rating')}</div></div>
         </div>
       </div>
     </section>
