@@ -467,7 +467,7 @@ export default function BoatDetailPage() {
             <span>⛵ {boat.model}</span>
             <span>📅 {boat.year}</span>
             <span>🛏 {boat.cabins} {t('cabins')}</span>
-            <span>📍 {boat.marina}</span>
+            <span>📍 Göcek</span>
           </div>
         </div>
       </div>

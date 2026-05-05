@@ -62,7 +62,7 @@ export function BoatCard({ boat, className }: BoatCardProps) {
         <div className="nb-boat-specs">
           <span>⚓ {boat.cabins} {t('cabin')}</span>
           <span>👥 max {boat.maxPax}</span>
-          <span>📍 {boat.marina}</span>
+          <span>📍 Göcek</span>
         </div>
         <div className="nb-boat-foot">
           <div>

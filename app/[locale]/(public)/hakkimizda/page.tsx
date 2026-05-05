@@ -120,9 +120,6 @@ export default function HakkimizdaPage() {
             </div>
             <div>
               <div className="eyebrow" style={{ marginBottom: 14 }}>{t('story_period')}</div>
-              <h2 className="display" style={{ fontSize: 'clamp(28px,3.5vw,44px)', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: 24, fontWeight: 700 }}>
-                {t('story_heading')}
-              </h2>
               <p style={{ fontSize: 17, lineHeight: 1.7, color: 'var(--muted)', marginBottom: 20 }}>
                 {t('story_p1')}
               </p>
