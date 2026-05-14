@@ -12,7 +12,7 @@ export function Footer() {
       <div className="container nb-footer-grid">
         <div>
           <div style={{ marginBottom: 20, display: 'inline-block' }}>
-            <Logo invert height={36} />
+            <Logo mark="white" height={40} />
           </div>
           <p style={{ color: 'rgba(255,255,255,.72)', fontSize: 14, maxWidth: 320, lineHeight: 1.7 }}>
             {t('tagline')}

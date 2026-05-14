@@ -60,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }}>
         {/* Logo */}
         <div style={{ padding: '0 24px 20px', borderBottom: '1px solid rgba(255,255,255,.08)', marginBottom: 4 }}>
-          <Logo invert height={28} />
+          <Logo height={28} />
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', marginTop: 6, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             Admin Panel
           </div>

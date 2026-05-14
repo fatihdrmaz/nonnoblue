@@ -11,7 +11,8 @@ export function Nav() {
   const t = useTranslations('nav');
   const router = useRouter();
   const pathname = usePathname();
-  const isHome = pathname === '/';
+  const pathNorm = (pathname ?? '/').replace(/\/$/, '') || '/';
+  const isHome = pathNorm === '/';
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -41,10 +42,20 @@ export function Nav() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const sentinel = document.createElement('div');
+    sentinel.style.cssText = 'position:absolute;top:60px;left:0;height:1px;width:1px;pointer-events:none;z-index:-1;';
+    document.body.insertBefore(sentinel, document.body.firstChild);
+
+    const obs = new IntersectionObserver(
+      ([entry]) => setScrolled(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(sentinel);
+
+    return () => {
+      obs.disconnect();
+      sentinel.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -53,13 +64,15 @@ export function Nav() {
   }, [menuOpen]);
 
   const transparent = isHome && !scrolled && !menuOpen;
+  const headerLogoMark = transparent ? 'leftwhite' : 'color';
+  const mobileLogoMark = isHome && !scrolled ? 'leftwhite' : 'color';
 
   return (
     <>
       <header className="nb-nav" data-transparent={transparent ? 'true' : 'false'}>
         <div className="container nb-nav-inner">
           <Link href="/" className="nb-nav-logo" onClick={() => setMenuOpen(false)}>
-            <Logo invert={transparent} height={38} />
+            <Logo key={headerLogoMark} height={42} priority mark={headerLogoMark} />
           </Link>
 
           <nav className="nb-nav-links">
@@ -166,7 +179,7 @@ export function Nav() {
         <div className="nb-mobile-panel" onClick={() => setMenuOpen(false)}>
           <div className="nb-mobile-inner" onClick={e => e.stopPropagation()}>
             <div className="nb-mobile-head">
-              <Logo height={26} />
+              <Logo height={30} mark={mobileLogoMark} />
               <button onClick={() => setMenuOpen(false)} aria-label="Close">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"/>
