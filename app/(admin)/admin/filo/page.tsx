@@ -184,39 +184,50 @@ export default function AdminFiloPage() {
     const files = Array.from(e.target.files ?? [])
     if (!files.length || !editing || editing === 'new') return
     setUploading(true)
-    const supabase = createClient()
+    let nextPos = photos.length > 0 ? Math.max(...photos.map(p => p.position)) + 1 : 0
     for (const file of files) {
-      const ext = file.name.split('.').pop()
-      const path = `${editing}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: uploadErr } = await supabase.storage.from(BUCKET).upload(path, file)
-      if (uploadErr) { setMsg('Upload hatası: ' + uploadErr.message); continue }
-      const nextPos = photos.length > 0 ? Math.max(...photos.map(p => p.position)) + 1 : 0
-      const { data, error: dbErr } = await supabase
-        .from('boat_photos')
-        .insert({ boat_id: editing, storage_path: path, position: nextPos })
-        .select()
-        .single()
-      if (!dbErr && data) setPhotos(prev => [...prev, data as BoatPhoto])
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('boatId', editing)
+      formData.append('position', String(nextPos))
+      const res = await fetch('/api/admin/photos', { method: 'POST', body: formData })
+      const json = await res.json()
+      if (!res.ok) { setMsg('Upload hatası: ' + json.error); continue }
+      setPhotos(prev => [...prev, json.photo as BoatPhoto])
+      nextPos++
     }
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   async function handlePhotoDelete(photo: BoatPhoto) {
-    const supabase = createClient()
-    await supabase.storage.from(BUCKET).remove([photo.storage_path])
-    await supabase.from('boat_photos').delete().eq('id', photo.id)
+    const res = await fetch('/api/admin/photos', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photoId: photo.id, storagePath: photo.storage_path }),
+    })
+    if (!res.ok) {
+      const json = await res.json()
+      setMsg('Silme hatası: ' + json.error)
+      return
+    }
     setPhotos(prev => prev.filter(p => p.id !== photo.id))
   }
 
   async function handleSetCover(photo: BoatPhoto) {
-    const supabase = createClient()
     const updates = photos.map((p, i) => ({
       id: p.id,
       position: p.id === photo.id ? 0 : i + 1,
     }))
-    for (const u of updates) {
-      await supabase.from('boat_photos').update({ position: u.position }).eq('id', u.id)
+    const res = await fetch('/api/admin/photos', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ positions: updates }),
+    })
+    if (!res.ok) {
+      const json = await res.json()
+      setMsg('Sıralama hatası: ' + json.error)
+      return
     }
     setPhotos(prev =>
       [...prev].map(p => ({ ...p, position: p.id === photo.id ? 0 : prev.indexOf(p) + 1 }))

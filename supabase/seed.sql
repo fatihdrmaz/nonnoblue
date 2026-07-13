@@ -2,30 +2,30 @@
 -- Not: boat_photos.storage_path şimdilik Unsplash URL, gerçek fotoğraflar Supabase Storage'a yüklenince güncellenir
 insert into boats (slug, name, type, brand, model, year, length_m, beam_m, cabins, bathrooms, max_guests, marina, deposit_eur, description_tr, features, active, display_order) values
 (
-  'ivan-nonno', 'Ivan Nonno', 'Katamaran', 'Lagoon', 'Lagoon 42', 2021,
-  12.78, 7.37, 4, 4, 10, 'Göcek', 3000,
-  'Göcek marinasında konuşlu 2021 model Lagoon 42. Klimalı 4 kabin + salon, jeneratör ve watermaker ile tam donanımlı konforlu bir tatil.',
+  'ivan-nonno', 'Ivan Nonno', 'Katamaran', 'Lagoon', 'Lagoon 42', 2024,
+  12.78, 7.37, 4, 4, 10, 'Göcek', 4000,
+  'Göcek marinasında konuşlu 2024 model Lagoon 42. Klimalı 4+2 kabin + salon, jeneratör ve watermaker ile tam donanımlı konforlu bir tatil.',
   ARRAY['Klima (4 kabin + salon)','Jeneratör Dempar 11 KW','Watermaker','Bose ses sistemi','Nespresso dahil','Çift dümen','2 × Yanmar 57 HP','Lazy jack + lazy bag'],
   true, 1
 ),
 (
-  'ayza-1', 'Ayza 1', 'Katamaran', 'Lagoon', 'Lagoon 42', 2022,
-  12.78, 7.37, 4, 4, 10, 'Göcek', 3000,
-  'Filomuzun en yeni teknesi — 2022 model Lagoon 42. Elektrikli vinçler, klima ve watermaker ile lüks charter deneyimi.',
+  'ayza-1', 'Ayza 1', 'Katamaran', 'Lagoon', 'Lagoon 42', 2024,
+  12.78, 7.37, 4, 4, 10, 'Göcek', 4000,
+  'Göcek marinasında konuşlu 2024 model Lagoon 42. 4+2 kabin, elektrikli vinçler, klima ve watermaker ile lüks charter deneyimi.',
   ARRAY['Klima (4 kabin + salon)','Jeneratör Dempar 11 KW','Watermaker','Elektrikli vinçler','Nespresso dahil','Çift dümen','2 × Yanmar 57 HP','Lazy jack + lazy bag'],
   true, 2
 ),
 (
-  'rena', 'Rena', 'Katamaran', 'Beneteau Group', 'Excess 11', 2021,
-  11.00, 6.55, 4, 4, 8, 'Marmaris', 2500,
-  'Marmaris marinasında 2021 model Excess 11. Solar panel sistemi, Bose Sound System ve karaoke ile eğlenceli bir charter deneyimi.',
-  ARRAY['Solar panel sistemi','Bose Sound System','Karaoke','Nespresso dahil','Merkezi dümen','2 × Volvo 29 HP','AIS transceiver','Lazy bag'],
+  'rena', 'Rena', 'Katamaran', 'Lagoon', 'Lagoon 42', 2023,
+  12.78, 7.37, 4, 4, 8, 'Marmaris', 4000,
+  'Marmaris marinasında 2023 model Lagoon 42. 4+2 kabin, Bose Sound System ve karaoke ile eğlenceli bir charter deneyimi.',
+  ARRAY['Solar panel sistemi','Bose Sound System','Karaoke','Nespresso dahil','Çift dümen','2 × Yanmar 57 HP','AIS transceiver','Lazy bag'],
   true, 3
 ),
 (
-  'carmelina', 'Carmelina', 'Katamaran', 'Beneteau Group', 'Excess 11', 2020,
-  11.00, 6.55, 4, 4, 8, 'Bodrum', 2000,
-  'Bodrum marinasında 2020 model Excess 11. Fiyat-performans dengesiyle en uygun katamaran seçeneği.',
+  'carmelina', 'Carmelina', 'Katamaran', 'Beneteau Group', 'Excess 11', 2021,
+  11.00, 6.55, 4, 4, 8, 'Bodrum', 3000,
+  'Bodrum marinasında 2021 model Excess 11. 4+2 kabin, fiyat-performans dengesiyle en uygun katamaran seçeneği.',
   ARRAY['Solar panel sistemi','Bose Sound System','Karaoke','Nespresso dahil','Merkezi dümen','2 × Volvo 29 HP','Lazy bag'],
   true, 4
 );
