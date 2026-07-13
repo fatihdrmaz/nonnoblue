@@ -210,7 +210,8 @@
     "month_september": "September",
     "month_october": "October",
     "month_november": "November",
-    "month_december": "December"
+    "month_december": "December",
+    "all_photos": "All photos"
   },
   "routes": {
     "title": "Our Routes",
@@ -641,21 +642,29 @@
     "p1_type": "Full-Time / Seasonal",
     "p1_location": "Göcek, Muğla",
     "p1_desc": "Minimum 5 years of blue voyage experience, valid skipper's licence. Foreign language (English or German) preferred.",
-    "p1_t1": "Captaining", "p1_t2": "Experienced", "p1_t3": "Seasonal",
+    "p1_t1": "Captaining",
+    "p1_t2": "Experienced",
+    "p1_t3": "Seasonal",
     "p2_title": "Hostess / Steward",
     "p2_type": "Seasonal (May – October)",
     "p2_location": "Göcek, Muğla",
     "p2_desc": "Experienced in guest service, boat maintenance and service. Tourism or hospitality background preferred.",
-    "p2_t1": "Hostess", "p2_t2": "Service", "p2_t3": "Tourism",
+    "p2_t1": "Hostess",
+    "p2_t2": "Service",
+    "p2_t3": "Tourism",
     "p3_title": "Reservations & Customer Representative",
     "p3_type": "Full-Time",
     "p3_location": "Göcek or Remote",
     "p3_desc": "Experience in boat charter industry, strong communication skills, CRM usage. English required, German/Russian a plus.",
-    "p3_t1": "Office", "p3_t2": "CRM", "p3_t3": "English",
+    "p3_t1": "Office",
+    "p3_t2": "CRM",
+    "p3_t3": "English",
     "p4_title": "Digital Marketing Specialist",
     "p4_type": "Full-Time / Remote",
     "p4_location": "Remote",
     "p4_desc": "SEO, social media management, Google Ads and content creation. Tourism sector experience is an advantage.",
-    "p4_t1": "Marketing", "p4_t2": "SEO", "p4_t3": "Remote"
+    "p4_t1": "Marketing",
+    "p4_t2": "SEO",
+    "p4_t3": "Remote"
   }
 }

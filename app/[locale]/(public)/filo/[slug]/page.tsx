@@ -277,7 +277,25 @@ export default function BoatDetailPage() {
   const [notFoundFlag, setNotFoundFlag] = useState(false);
 
   const [activeImg, setActiveImg] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(0);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const count = photos.length;
+    if (!count) return;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+      if (e.key === 'ArrowRight') setActiveImg(i => (i + 1) % count);
+      if (e.key === 'ArrowLeft') setActiveImg(i => (i - 1 + count) % count);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [lightboxOpen, photos.length]);
   const [extras, setExtras] = useState({ skipper: false, hostess: false, sup: false, wifi: false });
   const [charterType, setCharterType] = useState('bareboat');
   const [pax, setPax] = useState('8');
@@ -443,7 +461,7 @@ export default function BoatDetailPage() {
   return (
     <>
       {/* Hero */}
-      <div className="nb-boat-hero">
+      <div className="nb-boat-hero" onClick={() => galleryPaths.length && setLightboxOpen(true)} style={{ cursor: galleryPaths.length ? 'zoom-in' : undefined }}>
         {heroImg && <Image
           src={heroImg}
           alt={boat.name}
@@ -452,7 +470,25 @@ export default function BoatDetailPage() {
           priority
           sizes="100vw"
         />}
-        <div className="nb-boat-hero-info">
+        {galleryPaths.length > 0 && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
+            style={{
+              position: 'absolute', right: 20, bottom: 20, zIndex: 2,
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'rgba(255,255,255,.92)', color: 'var(--ink)',
+              border: 'none', borderRadius: 10, padding: '10px 16px',
+              fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              boxShadow: '0 2px 12px rgba(0,0,0,.25)',
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+            </svg>
+            {t('all_photos')} ({galleryPaths.length})
+          </button>
+        )}
+        <div className="nb-boat-hero-info" onClick={(e) => e.stopPropagation()}>
           <div className="breadcrumb" style={{ color: 'rgba(255,255,255,.7)' }}>
             <Link href="/" style={{ color: 'inherit' }}>{t('home')}</Link>
             <span>/</span>
@@ -478,7 +514,7 @@ export default function BoatDetailPage() {
           {galleryPaths.map((g, i) => (
             <button
               key={i}
-              onClick={() => setActiveImg(i)}
+              onClick={() => { setActiveImg(i); setLightboxOpen(true); }}
               style={{
                 width: 80,
                 height: 60,
@@ -929,6 +965,104 @@ export default function BoatDetailPage() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Lightbox */}
+      {lightboxOpen && galleryPaths.length > 0 && (
+        <div
+          onClick={() => setLightboxOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 10000,
+            background: 'rgba(5,15,30,.94)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          {/* Close */}
+          <button
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close"
+            style={{
+              position: 'absolute', top: 18, right: 20, zIndex: 2,
+              background: 'rgba(255,255,255,.12)', border: 'none', borderRadius: '50%',
+              width: 44, height: 44, color: '#fff', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+
+          {/* Counter */}
+          <div style={{ position: 'absolute', top: 28, left: 24, color: 'rgba(255,255,255,.8)', fontSize: 14, fontWeight: 600, zIndex: 2 }}>
+            {activeImg + 1} / {galleryPaths.length}
+          </div>
+
+          {/* Prev */}
+          {galleryPaths.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setActiveImg(i => (i - 1 + galleryPaths.length) % galleryPaths.length); }}
+              aria-label="Previous"
+              style={{
+                position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 2,
+                background: 'rgba(255,255,255,.12)', border: 'none', borderRadius: '50%',
+                width: 48, height: 48, color: '#fff', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+          )}
+
+          {/* Image — object-contain: full photo, no crop */}
+          <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', width: 'min(94vw, 1400px)', height: 'min(86vh, 900px)' }}>
+            <Image
+              src={galleryPaths[activeImg]}
+              alt={`${boat.name} ${activeImg + 1}`}
+              fill
+              style={{ objectFit: 'contain' }}
+              sizes="94vw"
+              priority
+            />
+          </div>
+
+          {/* Next */}
+          {galleryPaths.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setActiveImg(i => (i + 1) % galleryPaths.length); }}
+              aria-label="Next"
+              style={{
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 2,
+                background: 'rgba(255,255,255,.12)', border: 'none', borderRadius: '50%',
+                width: 48, height: 48, color: '#fff', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          )}
+
+          {/* Thumb strip */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+              display: 'flex', gap: 8, maxWidth: '92vw', overflowX: 'auto', padding: '4px 8px', zIndex: 2,
+            }}
+          >
+            {galleryPaths.map((g, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveImg(i)}
+                style={{
+                  width: 64, height: 44, borderRadius: 6, overflow: 'hidden', flexShrink: 0,
+                  border: i === activeImg ? '2px solid #fff' : '2px solid transparent',
+                  opacity: i === activeImg ? 1 : 0.55, cursor: 'pointer', position: 'relative', padding: 0,
+                }}
+              >
+                <Image src={g} alt="" fill style={{ objectFit: 'cover' }} sizes="64px" />
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </>
   );
