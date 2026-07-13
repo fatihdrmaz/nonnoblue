@@ -10,7 +10,7 @@ const PROTECTED = ['/admin', '/hesabim'];
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip API, admin, _next, static files
+  // Skip API, _next, static files
   if (
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
@@ -20,15 +20,16 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  // Run next-intl middleware first
-  const intlResponse = intlMiddleware(request);
+  // /admin lives outside the [locale] tree — auth check only, skip intl
+  const isAdminPath = pathname.startsWith('/admin');
+  const intlResponse = isAdminPath ? null : intlMiddleware(request);
 
   // Determine the locale-stripped pathname for auth checks
   const strippedPathname = pathname.replace(/^\/(en|tr)/, '') || '/';
-  const needsAuth = PROTECTED.some((p) => strippedPathname.startsWith(p));
+  const needsAuth = isAdminPath || PROTECTED.some((p) => strippedPathname.startsWith(p));
 
   if (!needsAuth) {
-    return intlResponse;
+    return intlResponse ?? NextResponse.next({ request });
   }
 
   // Auth check for protected routes
@@ -79,5 +80,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|admin|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 };
