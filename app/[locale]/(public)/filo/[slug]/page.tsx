@@ -466,7 +466,7 @@ export default function BoatDetailPage() {
           src={heroImg}
           alt={boat.name}
           fill
-          style={{ objectFit: 'cover' }}
+          style={{ objectFit: 'cover', objectPosition: 'center 70%' }}
           priority
           sizes="100vw"
         />}

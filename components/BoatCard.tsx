@@ -39,7 +39,7 @@ export function BoatCard({ boat, className }: BoatCardProps) {
           src={imgSrc}
           alt={boat.name}
           fill
-          style={{ objectFit: 'cover' }}
+          style={{ objectFit: 'cover', objectPosition: 'center 70%' }}
           className="transition-transform duration-700 group-hover:scale-[1.06]"
           sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
         />}
