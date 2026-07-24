@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -59,6 +59,8 @@ export default function RezervasyonPage() {
 
 function RezervasyonForm() {
   const t = useTranslations('reservation');
+  const locale = useLocale();
+  const tr = locale !== 'en';
   const searchParams = useSearchParams();
   const boatParam = searchParams.get('boat') ?? '';
   const startParam = searchParams.get('start') ?? '';
@@ -70,10 +72,18 @@ function RezervasyonForm() {
     adSoyad: '', eposta: '', telefon: '', ozelIstekler: '',
   });
   const [errors, setErrors] = useState<Errors>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState<'form' | 'payment' | 'done'>('form');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [bookingCode, setBookingCode] = useState('');
+  const [bookedBoatName, setBookedBoatName] = useState('');
+  const [quote, setQuote] = useState<{ weekly: number | null; weeks: number; total: number | null }>({ weekly: null, weeks: 1, total: null });
+
+  // Payment step state (UI only — card data is never transmitted; POS activation pending)
+  const [card, setCard] = useState({ name: '', number: '', exp: '', cvv: '' });
+  const [agree, setAgree] = useState({ contract: false, cancel: false });
+  const [payError, setPayError] = useState('');
+  const [payNotice, setPayNotice] = useState(false);
 
   const [boats, setBoats] = useState<{ id: string; slug: string; name: string; type: string }[]>([]);
   const [routes, setRoutes] = useState<{ id: string; title: string }[]>([]);
@@ -170,9 +180,29 @@ function RezervasyonForm() {
       // Email failure is non-blocking
     }
 
+    // Fetch weekly price for the selected boat/dates → payment summary
+    let weekly: number | null = null;
+    if (selectedBoat?.id) {
+      const { data: priceRows } = await supabase
+        .from('boat_pricing')
+        .select('weekly_price_eur,start_date,end_date')
+        .eq('boat_id', selectedBoat.id)
+        .lte('start_date', form.baslangicTarihi)
+        .gte('end_date', form.baslangicTarihi)
+        .limit(1);
+      weekly = priceRows?.[0]?.weekly_price_eur ?? null;
+    }
+    const days = Math.max(1, Math.round(
+      (new Date(form.bitisTarihi).getTime() - new Date(form.baslangicTarihi).getTime()) / 86400000
+    ));
+    const weeks = Math.max(1, Math.ceil(days / 7));
+    setQuote({ weekly, weeks, total: weekly !== null ? weekly * weeks : null });
+
     setBookingCode(code);
-    setSubmitted(true);
+    setBookedBoatName(selectedBoat?.name ?? form.tekne);
+    setStep('payment');
     setSubmitting(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   const selectStyle = (hasError: boolean): React.CSSProperties => ({
@@ -200,7 +230,7 @@ function RezervasyonForm() {
         <div className="container">
           <div style={{ maxWidth: 700, margin: '0 auto' }}>
 
-            {submitted ? (
+            {step === 'done' ? (
               <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '60px 48px', textAlign: 'center' }}>
                 <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'var(--foam)', border: '2px solid var(--teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 28px', fontSize: 32, color: 'var(--teal)' }}>✓</div>
                 <h2 style={{ fontFamily: 'var(--font-serif, "Playfair Display", serif)', fontSize: 28, fontWeight: 700, color: 'var(--deep)', marginBottom: 16 }}>
@@ -215,6 +245,161 @@ function RezervasyonForm() {
                 <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--teal)', color: '#fff', borderRadius: 'var(--radius-sm)', padding: '13px 28px', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
                   {t('home_btn')}
                 </Link>
+              </div>
+            ) : step === 'payment' ? (
+              <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '40px 40px 48px' }}>
+                <h2 style={{ fontFamily: 'var(--font-serif, "Playfair Display", serif)', fontSize: 24, fontWeight: 700, color: 'var(--deep)', marginBottom: 8 }}>
+                  {tr ? 'Ödeme' : 'Payment'}
+                </h2>
+                <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 32 }}>
+                  {tr ? 'Rezervasyon kodunuz:' : 'Your booking code:'}{' '}
+                  <strong style={{ fontFamily: 'monospace', color: 'var(--ink)' }}>{bookingCode}</strong>
+                </p>
+
+                {/* Booking summary */}
+                <div style={{ background: 'var(--foam)', border: '1px solid var(--line)', borderRadius: 'var(--radius-sm)', padding: '20px 24px', marginBottom: 24 }}>
+                  <p style={{ ...sectionTitleStyle, marginBottom: 14 }}>{tr ? 'Rezervasyon Özeti' : 'Booking Summary'}</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 16px', fontSize: 14 }}>
+                    <div><span style={{ color: 'var(--muted)' }}>{tr ? 'Tekne' : 'Boat'}:</span> <strong>{bookedBoatName}</strong></div>
+                    <div><span style={{ color: 'var(--muted)' }}>{tr ? 'Kişi' : 'Guests'}:</span> <strong>{form.kisiSayisi}</strong></div>
+                    <div><span style={{ color: 'var(--muted)' }}>{tr ? 'Başlangıç' : 'Start'}:</span> <strong>{form.baslangicTarihi}</strong></div>
+                    <div><span style={{ color: 'var(--muted)' }}>{tr ? 'Bitiş' : 'End'}:</span> <strong>{form.bitisTarihi}</strong></div>
+                    <div><span style={{ color: 'var(--muted)' }}>Charter:</span> <strong>{form.charterTipi}</strong></div>
+                  </div>
+                </div>
+
+                {/* Price breakdown */}
+                <div style={{ border: '1px solid var(--line)', borderRadius: 'var(--radius-sm)', padding: '20px 24px', marginBottom: 28 }}>
+                  <p style={{ ...sectionTitleStyle, marginBottom: 14 }}>{tr ? 'Tutar Dökümü' : 'Price Breakdown'}</p>
+                  {quote.total !== null ? (
+                    <div style={{ fontSize: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{tr ? 'Haftalık kiralama bedeli' : 'Weekly charter fee'}{quote.weeks > 1 ? ` × ${quote.weeks}` : ''}</span>
+                        <span>€{(quote.weekly ?? 0).toLocaleString()}{quote.weeks > 1 ? ` × ${quote.weeks}` : ''}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, borderTop: '1px solid var(--line)', paddingTop: 10 }}>
+                        <span>{tr ? 'Toplam' : 'Total'}</span>
+                        <span>€{quote.total.toLocaleString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--teal)', fontWeight: 700 }}>
+                        <span>{tr ? 'Şimdi ödenecek ön ödeme (%50)' : 'Deposit due now (50%)'}</span>
+                        <span>€{Math.round(quote.total / 2).toLocaleString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)', fontSize: 13 }}>
+                        <span>{tr ? 'Kalan bakiye (teslimden 30 gün önce)' : 'Balance (30 days before check-in)'}</span>
+                        <span>€{(quote.total - Math.round(quote.total / 2)).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: 14, color: 'var(--muted)' }}>
+                      {tr
+                        ? 'Seçilen tarihler için fiyat bilgisi e-posta ile iletilecektir.'
+                        : 'Pricing for the selected dates will be sent by e-mail.'}
+                    </p>
+                  )}
+                </div>
+
+                {payNotice ? (
+                  <div style={{ background: 'var(--foam)', border: '1.5px solid var(--teal)', borderRadius: 'var(--radius-sm)', padding: '24px 28px', textAlign: 'center' }}>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--deep)', marginBottom: 8 }}>
+                      {tr ? 'Kredi kartı ödeme altyapımız banka aktivasyon sürecindedir.' : 'Our credit card payment infrastructure is pending bank activation.'}
+                    </p>
+                    <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 20 }}>
+                      {tr
+                        ? 'Rezervasyonunuz kaydedildi. Ödeme bilgileri (havale/EFT) e-posta ile iletilecektir.'
+                        : 'Your booking has been recorded. Payment details (bank transfer) will be sent by e-mail.'}
+                    </p>
+                    <button onClick={() => setStep('done')} style={{ background: 'var(--teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '13px 28px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+                      {tr ? 'Tamam' : 'OK'}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Card form */}
+                    <p style={sectionTitleStyle}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'var(--teal)', color: '#fff', fontSize: 12, fontWeight: 800 }}>€</span>
+                      {tr ? 'Kart Bilgileri' : 'Card Details'}
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 24 }}>
+                      <div>
+                        <label htmlFor="cardName" style={labelStyle}>{tr ? 'Kart Üzerindeki İsim' : 'Cardholder Name'}</label>
+                        <input id="cardName" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))} placeholder={tr ? 'Ad Soyad' : 'Full name'} style={inputStyle(false)} autoComplete="cc-name" />
+                      </div>
+                      <div>
+                        <label htmlFor="cardNumber" style={labelStyle}>{tr ? 'Kart Numarası' : 'Card Number'}</label>
+                        <input
+                          id="cardNumber" inputMode="numeric" value={card.number}
+                          onChange={e => setCard(c => ({ ...c, number: e.target.value.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ') }))}
+                          placeholder="0000 0000 0000 0000" style={inputStyle(false)} autoComplete="cc-number"
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        <div>
+                          <label htmlFor="cardExp" style={labelStyle}>{tr ? 'Son Kullanma' : 'Expiry'}</label>
+                          <input
+                            id="cardExp" inputMode="numeric" value={card.exp}
+                            onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); setCard(c => ({ ...c, exp: v.length > 2 ? v.slice(0, 2) + '/' + v.slice(2) : v })); }}
+                            placeholder="AA/YY" style={inputStyle(false)} autoComplete="cc-exp"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="cardCvv" style={labelStyle}>CVV</label>
+                          <input id="cardCvv" inputMode="numeric" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value.replace(/\D/g, '').slice(0, 3) }))} placeholder="123" style={inputStyle(false)} autoComplete="cc-csc" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Agreements */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, cursor: 'pointer', color: 'var(--ink)' }}>
+                        <input type="checkbox" checked={agree.contract} onChange={e => setAgree(a => ({ ...a, contract: e.target.checked }))} style={{ marginTop: 2, accentColor: 'var(--teal)' }} />
+                        <span>
+                          {tr ? <><Link href="/sozlesme" target="_blank" style={{ color: 'var(--teal)', fontWeight: 600 }}>Mesafeli Satış Sözleşmesi</Link>&apos;ni okudum, kabul ediyorum.</>
+                            : <>I have read and accept the <Link href="/sozlesme" target="_blank" style={{ color: 'var(--teal)', fontWeight: 600 }}>Distance Sales Agreement</Link>.</>}
+                        </span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, cursor: 'pointer', color: 'var(--ink)' }}>
+                        <input type="checkbox" checked={agree.cancel} onChange={e => setAgree(a => ({ ...a, cancel: e.target.checked }))} style={{ marginTop: 2, accentColor: 'var(--teal)' }} />
+                        <span>
+                          {tr ? <><Link href="/iptal-politikasi" target="_blank" style={{ color: 'var(--teal)', fontWeight: 600 }}>İptal &amp; İade Koşulları</Link>&apos;nı okudum, kabul ediyorum.</>
+                            : <>I have read and accept the <Link href="/iptal-politikasi" target="_blank" style={{ color: 'var(--teal)', fontWeight: 600 }}>Cancellation &amp; Refund Policy</Link>.</>}
+                        </span>
+                      </label>
+                    </div>
+
+                    {payError && (
+                      <div style={{ padding: '12px 16px', background: '#fee2e2', borderRadius: 8, color: '#991b1b', fontSize: 13, marginBottom: 16 }}>
+                        {payError}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        if (!agree.contract || !agree.cancel) {
+                          setPayError(tr ? 'Devam etmek için sözleşmeleri onaylamanız gerekir.' : 'Please accept the agreements to continue.');
+                          return;
+                        }
+                        setPayError('');
+                        setPayNotice(true);
+                      }}
+                      style={{ width: '100%', background: 'var(--teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '16px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.02em' }}
+                    >
+                      {quote.total !== null
+                        ? (tr ? `€${Math.round(quote.total / 2).toLocaleString()} Öde` : `Pay €${Math.round(quote.total / 2).toLocaleString()}`)
+                        : (tr ? 'Ödemeye Devam Et' : 'Continue to Payment')}
+                    </button>
+                    <button
+                      onClick={() => setStep('done')}
+                      style={{ width: '100%', marginTop: 10, background: 'transparent', color: 'var(--muted)', border: '1.5px solid var(--line)', borderRadius: 'var(--radius-sm)', padding: '13px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      {tr ? 'Havale / EFT ile ödeyeceğim' : 'I will pay by bank transfer'}
+                    </button>
+                    <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)', marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      {tr ? '256-bit SSL ile şifrelenir · 3D Secure ile doğrulanır' : 'Encrypted with 256-bit SSL · Verified by 3D Secure'}
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '40px 40px 48px' }}>
