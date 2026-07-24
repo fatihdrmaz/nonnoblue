@@ -128,34 +128,33 @@ function RezervasyonForm() {
     setSubmitting(true);
     setSubmitError('');
 
-    const code = `NB-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
     const selectedBoat = boats.find(b => b.id === form.tekne || b.slug === form.tekne);
 
-    const payload: Record<string, unknown> = {
-      code,
-      boat_id: selectedBoat?.id ?? form.tekne,
-      start_date: form.baslangicTarihi,
-      end_date: form.bitisTarihi,
-      guest_count: parseInt(form.kisiSayisi) || 1,
-      charter_type: form.charterTipi,
-      captain_requested: form.istegeKaptan,
-      guest_name: form.adSoyad,
-      guest_email: form.eposta,
-      guest_phone: form.telefon,
-      notes: form.ozelIstekler || null,
-      status: 'pending',
-    };
-
-    if (form.rota) payload.route_id = form.rota;
-    if (user) payload.user_id = user.id;
-
-    const { error } = await supabase.from('bookings').insert(payload);
-
-    if (error) {
-      setSubmitError('Bir hata oluştu: ' + error.message);
+    // Create booking server-side (service role — bypasses RLS, computes pricing)
+    let created: { code: string; boatName: string; quote: { weekly: number | null; weeks: number; total: number | null } };
+    try {
+      const res = await fetch('/api/booking/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          boatId: selectedBoat?.id ?? form.tekne,
+          routeId: form.rota || null,
+          charterTipi: form.charterTipi,
+          baslangicTarihi: form.baslangicTarihi,
+          bitisTarihi: form.bitisTarihi,
+          kisiSayisi: form.kisiSayisi,
+          istegeKaptan: form.istegeKaptan,
+          adSoyad: form.adSoyad,
+          eposta: form.eposta,
+          telefon: form.telefon,
+          ozelIstekler: form.ozelIstekler || null,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'unknown');
+      created = json;
+    } catch (err) {
+      setSubmitError('Bir hata oluştu: ' + (err instanceof Error ? err.message : String(err)));
       setSubmitting(false);
       return;
     }
@@ -166,10 +165,10 @@ function RezervasyonForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code,
+          code: created.code,
           adSoyad: form.adSoyad,
           eposta: form.eposta,
-          tekneAdi: selectedBoat?.name ?? form.tekne,
+          tekneAdi: created.boatName,
           baslangicTarihi: form.baslangicTarihi,
           bitisTarihi: form.bitisTarihi,
           charterTipi: form.charterTipi,
@@ -180,26 +179,9 @@ function RezervasyonForm() {
       // Email failure is non-blocking
     }
 
-    // Fetch weekly price for the selected boat/dates → payment summary
-    let weekly: number | null = null;
-    if (selectedBoat?.id) {
-      const { data: priceRows } = await supabase
-        .from('boat_pricing')
-        .select('weekly_price_eur,start_date,end_date')
-        .eq('boat_id', selectedBoat.id)
-        .lte('start_date', form.baslangicTarihi)
-        .gte('end_date', form.baslangicTarihi)
-        .limit(1);
-      weekly = priceRows?.[0]?.weekly_price_eur ?? null;
-    }
-    const days = Math.max(1, Math.round(
-      (new Date(form.bitisTarihi).getTime() - new Date(form.baslangicTarihi).getTime()) / 86400000
-    ));
-    const weeks = Math.max(1, Math.ceil(days / 7));
-    setQuote({ weekly, weeks, total: weekly !== null ? weekly * weeks : null });
-
-    setBookingCode(code);
-    setBookedBoatName(selectedBoat?.name ?? form.tekne);
+    setQuote(created.quote);
+    setBookingCode(created.code);
+    setBookedBoatName(created.boatName);
     setStep('payment');
     setSubmitting(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
