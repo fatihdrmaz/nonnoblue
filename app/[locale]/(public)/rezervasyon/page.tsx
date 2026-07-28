@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { BOATS, ROUTES } from '@/data/mock';
+import { useEurTry, formatTry } from '@/lib/useEurTry';
 
 interface FormState {
   tekne: string;
@@ -61,6 +62,7 @@ function RezervasyonForm() {
   const t = useTranslations('reservation');
   const locale = useLocale();
   const tr = locale !== 'en';
+  const eurTry = useEurTry();
   const searchParams = useSearchParams();
   const boatParam = searchParams.get('boat') ?? '';
   const startParam = searchParams.get('start') ?? '';
@@ -261,16 +263,23 @@ function RezervasyonForm() {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, borderTop: '1px solid var(--line)', paddingTop: 10 }}>
                         <span>{tr ? 'Toplam' : 'Total'}</span>
-                        <span>€{quote.total.toLocaleString()}</span>
+                        <span>€{quote.total.toLocaleString()}{eurTry !== null && <span style={{ fontWeight: 500, color: 'var(--muted)', fontSize: 13 }}> ≈ {formatTry(quote.total, eurTry)}</span>}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--teal)', fontWeight: 700 }}>
                         <span>{tr ? 'Şimdi ödenecek ön ödeme (%50)' : 'Deposit due now (50%)'}</span>
-                        <span>€{Math.round(quote.total / 2).toLocaleString()}</span>
+                        <span>€{Math.round(quote.total / 2).toLocaleString()}{eurTry !== null && <span style={{ fontWeight: 500, fontSize: 13 }}> ≈ {formatTry(Math.round(quote.total / 2), eurTry)}</span>}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)', fontSize: 13 }}>
                         <span>{tr ? 'Kalan bakiye (teslimden 30 gün önce)' : 'Balance (30 days before check-in)'}</span>
                         <span>€{(quote.total - Math.round(quote.total / 2)).toLocaleString()}</span>
                       </div>
+                      {eurTry !== null && (
+                        <p style={{ fontSize: 11, color: 'var(--muted)', margin: 0 }}>
+                          {tr
+                            ? `TL karşılıkları TCMB günlük satış kuru (1 EUR ≈ ₺${eurTry.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}) ile bilgilendirme amaçlı gösterilir.`
+                            : `TRY equivalents are shown for information using the daily TCMB rate (1 EUR ≈ ₺${eurTry.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}).`}
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <p style={{ fontSize: 14, color: 'var(--muted)' }}>

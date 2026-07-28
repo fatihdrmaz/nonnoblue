@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { BoatCard, BoatForCard } from '@/components/BoatCard';
+import { useEurTry, formatTry } from '@/lib/useEurTry';
 
 const BOAT_SUPPLEMENT: Record<string, {
   charterType: string;
@@ -265,6 +266,7 @@ export default function BoatDetailPage() {
   const params = useParams<{ slug: string }>();
   const t = useTranslations('boat');
   const locale = useLocale();
+  const eurTry = useEurTry();
 
   const [boat, setBoat] = useState<DbBoat | null>(null);
   const [photos, setPhotos] = useState<DbPhoto[]>([]);
@@ -903,6 +905,11 @@ export default function BoatDetailPage() {
                   <span>{t('total')}</span>
                   <span>€{total.toLocaleString()}</span>
                 </div>
+                {eurTry !== null && total > 0 && (
+                  <div style={{ textAlign: 'right', fontSize: 13, color: 'var(--muted,#6b7f9e)', marginTop: 4 }}>
+                    ≈ {formatTry(total, eurTry)}
+                  </div>
+                )}
               </div>
 
               {/* Guarantee Notes */}

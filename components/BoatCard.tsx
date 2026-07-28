@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { useEurTry, formatTry } from '@/lib/useEurTry';
 
 export interface BoatForCard {
   id: string
@@ -31,6 +32,7 @@ function toPublicUrl(path: string): string {
 
 export function BoatCard({ boat, className }: BoatCardProps) {
   const t = useTranslations('fleet');
+  const eurTry = useEurTry();
   const imgSrc = toPublicUrl(boat.img);
   return (
     <Link href={`/filo/${boat.id}`} className={cn("nb-boat-card group block", className)}>
@@ -73,6 +75,11 @@ export function BoatCard({ boat, className }: BoatCardProps) {
               €{boat.priceFrom.toLocaleString('tr-TR')}
               <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--muted)' }}> {t('per_week')}</span>
             </div>
+            {eurTry !== null && boat.priceFrom > 0 && (
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 1 }}>
+                ≈ {formatTry(boat.priceFrom, eurTry)}
+              </div>
+            )}
           </div>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 4 }}>
             {t('detail')} →
