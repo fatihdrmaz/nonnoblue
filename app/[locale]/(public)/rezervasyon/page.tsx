@@ -73,11 +73,15 @@ function RezervasyonForm() {
     bitisTarihi: endParam, kisiSayisi: '', istegeKaptan: false,
     adSoyad: '', eposta: '', telefon: '', ozelIstekler: '',
   });
+  // Banka 3D dönüşü: /rezervasyon?payment=success|fail&code=...&reason=...
+  const paymentParam = searchParams.get('payment');
+  const paymentReason = searchParams.get('reason') ?? '';
+
   const [errors, setErrors] = useState<Errors>({});
-  const [step, setStep] = useState<'form' | 'payment' | 'done'>('form');
+  const [step, setStep] = useState<'form' | 'payment' | 'done'>(paymentParam === 'success' ? 'done' : 'form');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [bookingCode, setBookingCode] = useState('');
+  const [bookingCode, setBookingCode] = useState(paymentParam === 'success' ? (searchParams.get('code') ?? '') : '');
   const [bookedBoatName, setBookedBoatName] = useState('');
   const [quote, setQuote] = useState<{ weekly: number | null; weeks: number; total: number | null }>({ weekly: null, weeks: 1, total: null });
 
@@ -86,6 +90,7 @@ function RezervasyonForm() {
   const [agree, setAgree] = useState({ contract: false, cancel: false });
   const [payError, setPayError] = useState('');
   const [payNotice, setPayNotice] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   const [boats, setBoats] = useState<{ id: string; slug: string; name: string; type: string }[]>([]);
   const [routes, setRoutes] = useState<{ id: string; title: string }[]>([]);
@@ -220,6 +225,11 @@ function RezervasyonForm() {
                 <h2 style={{ fontFamily: 'var(--font-serif, "Playfair Display", serif)', fontSize: 28, fontWeight: 700, color: 'var(--deep)', marginBottom: 16 }}>
                   {t('success_title')}
                 </h2>
+                {paymentParam === 'success' && (
+                  <p style={{ fontSize: 15, fontWeight: 700, color: '#15803d', marginBottom: 12 }}>
+                    {tr ? '✓ Ödemeniz başarıyla alındı.' : '✓ Your payment was received successfully.'}
+                  </p>
+                )}
                 <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 8 }}>
                   {t('success_code')} <strong style={{ fontFamily: 'monospace', color: 'var(--ink)' }}>{bookingCode}</strong>
                 </p>
@@ -365,15 +375,53 @@ function RezervasyonForm() {
                     )}
 
                     <button
-                      onClick={() => {
+                      disabled={paying}
+                      onClick={async () => {
                         if (!agree.contract || !agree.cancel) {
                           setPayError(tr ? 'Devam etmek için sözleşmeleri onaylamanız gerekir.' : 'Please accept the agreements to continue.');
                           return;
                         }
+                        const pan = card.number.replace(/\s/g, '');
+                        const [expM, expY] = card.exp.split('/');
+                        if (!card.name.trim() || pan.length < 15 || !expM || !expY || card.cvv.length < 3) {
+                          setPayError(tr ? 'Lütfen kart bilgilerini eksiksiz girin.' : 'Please fill in your card details completely.');
+                          return;
+                        }
                         setPayError('');
-                        setPayNotice(true);
+                        setPaying(true);
+                        try {
+                          const res = await fetch('/api/payment/garanti/init', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ code: bookingCode, email: form.eposta }),
+                          });
+                          const json = await res.json();
+                          if (res.status === 503) { setPaying(false); setPayNotice(true); return; }
+                          if (!res.ok) throw new Error(json.error ?? 'init_failed');
+                          // Kart bilgisi bu formla TARAYICIDAN DOĞRUDAN bankaya gider — sunucumuza uğramaz
+                          const f = document.createElement('form');
+                          f.method = 'POST';
+                          f.action = json.gatewayUrl;
+                          const all: Record<string, string> = {
+                            ...json.fields,
+                            cardnumber: pan,
+                            cardexpiredatemonth: expM.padStart(2, '0'),
+                            cardexpiredateyear: expY.slice(-2),
+                            cardcvv2: card.cvv,
+                          };
+                          for (const [k, v] of Object.entries(all)) {
+                            const i = document.createElement('input');
+                            i.type = 'hidden'; i.name = k; i.value = v;
+                            f.appendChild(i);
+                          }
+                          document.body.appendChild(f);
+                          f.submit();
+                        } catch {
+                          setPaying(false);
+                          setPayError(tr ? 'Ödeme başlatılamadı, lütfen tekrar deneyin.' : 'Payment could not be started, please try again.');
+                        }
                       }}
-                      style={{ width: '100%', background: 'var(--teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '16px 28px', fontSize: 16, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.02em' }}
+                      style={{ width: '100%', background: paying ? 'var(--muted)' : 'var(--teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '16px 28px', fontSize: 16, fontWeight: 700, cursor: paying ? 'wait' : 'pointer', letterSpacing: '0.02em' }}
                     >
                       {quote.total !== null
                         ? (tr ? `€${Math.round(quote.total / 2).toLocaleString()} Öde` : `Pay €${Math.round(quote.total / 2).toLocaleString()}`)
@@ -401,6 +449,16 @@ function RezervasyonForm() {
                   {t('form_sub')}
                 </p>
 
+                {paymentParam === 'fail' && (
+                  <div style={{ padding: '14px 18px', background: '#fee2e2', borderRadius: 8, color: '#991b1b', fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>
+                    <strong>{tr ? 'Ödeme tamamlanamadı.' : 'Payment could not be completed.'}</strong>{' '}
+                    {paymentReason && paymentReason !== 'declined' ? paymentReason : (tr ? 'Kartınız doğrulanamadı veya işlem reddedildi.' : 'Your card could not be verified or the transaction was declined.')}
+                    <br />
+                    {tr
+                      ? 'Rezervasyon talebiniz kayıtlıdır — dilerseniz tekrar deneyebilir veya WhatsApp üzerinden bizimle iletişime geçebilirsiniz.'
+                      : 'Your booking request is saved — you can try again or contact us via WhatsApp.'}
+                  </div>
+                )}
                 {submitError && (
                   <div style={{ padding: '12px 16px', background: '#fee2e2', borderRadius: 8, color: '#991b1b', fontSize: 13, marginBottom: 24 }}>
                     {submitError}
