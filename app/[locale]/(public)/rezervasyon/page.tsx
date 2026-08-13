@@ -131,6 +131,13 @@ function RezervasyonForm() {
     if (form.telefon && form.telefon.replace(/\D/g, '').length < 10) {
       newErrors.telefon = true; valid = false;
     }
+    const todayIso = new Date().toISOString().split('T')[0];
+    if (form.baslangicTarihi && form.baslangicTarihi < todayIso) {
+      newErrors.baslangicTarihi = true; valid = false;
+    }
+    if (form.bitisTarihi && form.baslangicTarihi && form.bitisTarihi <= form.baslangicTarihi) {
+      newErrors.bitisTarihi = true; valid = false;
+    }
     setErrors(newErrors);
     return valid;
   }
@@ -432,12 +439,6 @@ function RezervasyonForm() {
                       {quote.total !== null
                         ? (tr ? `€${Math.round(quote.total / 2).toLocaleString()} Öde` : `Pay €${Math.round(quote.total / 2).toLocaleString()}`)
                         : (tr ? 'Ödemeye Devam Et' : 'Continue to Payment')}
-                    </button>
-                    <button
-                      onClick={() => setStep('done')}
-                      style={{ width: '100%', marginTop: 10, background: 'transparent', color: 'var(--muted)', border: '1.5px solid var(--line)', borderRadius: 'var(--radius-sm)', padding: '13px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
-                    >
-                      {tr ? 'Havale / EFT ile ödeyeceğim' : 'I will pay by bank transfer'}
                     </button>
                     <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)', marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>

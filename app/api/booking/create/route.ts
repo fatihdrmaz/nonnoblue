@@ -24,6 +24,10 @@ export async function POST(request: Request) {
   if (String(telefon).replace(/\D/g, '').length < 10) {
     return NextResponse.json({ error: 'invalid_phone' }, { status: 400 });
   }
+  const todayIso = new Date().toISOString().split('T')[0];
+  if (String(baslangicTarihi) < todayIso || String(bitisTarihi) <= String(baslangicTarihi)) {
+    return NextResponse.json({ error: 'invalid_dates' }, { status: 400 });
+  }
 
   const admin = adminClient();
 
