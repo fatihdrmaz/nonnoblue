@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 
 type Booking = {
   id: string
@@ -39,20 +38,22 @@ export default function AdminRezervasyonlarPage() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase
-      .from('bookings')
-      .select('id,code,status,start_date,end_date,guest_count,total_amount,deposit_amount,balance_amount,guest_name,guest_email,boats(name)')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setBookings((data ?? []) as unknown as Booking[])
+    fetch('/api/admin/bookings')
+      .then(r => r.json())
+      .then(json => {
+        setBookings((json.bookings ?? []) as Booking[])
         setLoading(false)
       })
+      .catch(() => setLoading(false))
   }, [])
 
   async function updateStatus(id: string, newStatus: string) {
-    const supabase = createClient()
-    await supabase.from('bookings').update({ status: newStatus }).eq('id', id)
+    const res = await fetch('/api/admin/bookings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: newStatus }),
+    })
+    if (!res.ok) return
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b))
   }
 
