@@ -27,7 +27,7 @@ export async function GET() {
   const admin = adminClient();
   const { data, error } = await admin
     .from('bookings')
-    .select('id,code,status,start_date,end_date,guest_count,total_amount,deposit_amount,balance_amount,notes,created_at,boats(name)')
+    .select('id,code,status,start_date,end_date,guest_count,service_type,currency,fx_rate,total_amount,deposit_amount,balance_amount,iyzico_payment_id,contract_accepted_at,notes,created_at,boats(name)')
     .order('created_at', { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

@@ -18,6 +18,12 @@ export async function POST(request: Request) {
   if (!boatId || !baslangicTarihi || !bitisTarihi || !adSoyad || !eposta || !telefon) {
     return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(eposta).trim())) {
+    return NextResponse.json({ error: 'invalid_email' }, { status: 400 });
+  }
+  if (String(telefon).replace(/\D/g, '').length < 10) {
+    return NextResponse.json({ error: 'invalid_phone' }, { status: 400 });
+  }
 
   const admin = adminClient();
 

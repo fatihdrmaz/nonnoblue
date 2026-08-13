@@ -125,6 +125,12 @@ function RezervasyonForm() {
         newErrors[field] = true; valid = false;
       }
     }
+    if (form.eposta && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.eposta.trim())) {
+      newErrors.eposta = true; valid = false;
+    }
+    if (form.telefon && form.telefon.replace(/\D/g, '').length < 10) {
+      newErrors.telefon = true; valid = false;
+    }
     setErrors(newErrors);
     return valid;
   }
