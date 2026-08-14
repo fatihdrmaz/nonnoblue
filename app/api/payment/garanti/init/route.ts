@@ -39,12 +39,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'no_amount' }, { status: 400 });
   }
 
+  // Çoklu kur yetkisi aktif: tahsilat doğrudan EUR (978), kur çevirisi yok.
+  // TCMB kuru yalnızca bilgi amaçlı kaydedilir; alınamazsa ödeme engellenmez.
   const rate = await fetchEurTry();
-  if (!rate) return NextResponse.json({ error: 'fx_unavailable' }, { status: 502 });
-
-  // Depozito EUR → TRY kuruş (tam sayı)
-  const amountTry = Math.round(booking.deposit_amount * rate * 100); // kuruş
-  const amountStr = String(amountTry);
+  const amountCents = Math.round(booking.deposit_amount * 100); // EUR cent
+  const amountStr = String(amountCents);
 
   // Garanti orderid: alfanumerik — koddaki tireleri kaldır
   const orderId = booking.code.replace(/[^a-zA-Z0-9]/g, '');
@@ -55,7 +54,7 @@ export async function POST(request: Request) {
 
   const txnType = 'sales';
   const installments = '';
-  const currencyCode = '949'; // TRY
+  const currencyCode = '978'; // EUR — çoklu kur yetkisi ile doğrudan EUR tahsilatı
 
   const hash = make3DHash(cfg, orderId, amountStr, currencyCode, successUrl, errorUrl, txnType, installments);
 
@@ -94,7 +93,7 @@ export async function POST(request: Request) {
       motoind: 'N',
       refreshtime: '0',
     },
-    amountTry: amountTry / 100,
+    amountEur: amountCents / 100,
     rate,
   });
 }

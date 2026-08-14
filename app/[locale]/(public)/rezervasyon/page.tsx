@@ -299,8 +299,8 @@ function RezervasyonForm() {
                       {eurTry !== null && (
                         <p style={{ fontSize: 11, color: 'var(--muted)', margin: 0 }}>
                           {tr
-                            ? `TL karşılıkları TCMB günlük satış kuru (1 EUR ≈ ₺${eurTry.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}) ile bilgilendirme amaçlı gösterilir.`
-                            : `TRY equivalents are shown for information using the daily TCMB rate (1 EUR ≈ ₺${eurTry.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}).`}
+                            ? `Tahsilat EUR olarak yapılır. TL karşılıkları TCMB günlük satış kuru (1 EUR ≈ ₺${eurTry.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}) ile bilgilendirme amaçlı gösterilir.`
+                            : `Payment is charged in EUR. TRY equivalents are shown for information using the daily TCMB rate (1 EUR ≈ ₺${eurTry.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}).`}
                         </p>
                       )}
                     </div>

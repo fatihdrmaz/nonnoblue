@@ -60,8 +60,9 @@ export async function POST(request: Request) {
         const guestEmail = (booking.notes ?? '').split(' | ')
           .find((p: string) => p.startsWith('E-posta: '))?.slice('E-posta: '.length).trim();
         const boatName = (booking.boats as { name?: string } | null)?.name ?? '';
-        const amountTry = params['txnamount'] ? `₺${(parseInt(params['txnamount']) / 100).toLocaleString('tr-TR')}` : '';
-        const summary = `<p><strong>Kod:</strong> ${booking.code}<br/><strong>Tekne:</strong> ${boatName}<br/><strong>Tarih:</strong> ${booking.start_date} → ${booking.end_date}<br/><strong>Tahsil edilen ön ödeme:</strong> ${amountTry} (€${booking.deposit_amount.toLocaleString('tr-TR')})<br/><strong>Kalan bakiye:</strong> €${(booking.total_amount - booking.deposit_amount).toLocaleString('tr-TR')} (teslimden 30 gün önce)</p>`;
+        const currencySymbol = params['txncurrencycode'] === '978' ? '€' : '₺';
+        const chargedAmount = params['txnamount'] ? `${currencySymbol}${(parseInt(params['txnamount']) / 100).toLocaleString('tr-TR')}` : `€${booking.deposit_amount.toLocaleString('tr-TR')}`;
+        const summary = `<p><strong>Kod:</strong> ${booking.code}<br/><strong>Tekne:</strong> ${boatName}<br/><strong>Tarih:</strong> ${booking.start_date} → ${booking.end_date}<br/><strong>Tahsil edilen ön ödeme:</strong> ${chargedAmount}<br/><strong>Kalan bakiye:</strong> €${(booking.total_amount - booking.deposit_amount).toLocaleString('tr-TR')} (teslimden 30 gün önce)</p>`;
         const sends = [];
         if (guestEmail && guestEmail.includes('@')) {
           sends.push(resend.emails.send({
