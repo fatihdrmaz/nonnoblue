@@ -28,8 +28,9 @@ export async function POST(request: Request) {
         </tr>
         <tr>
           <td style="padding:36px 40px 28px;">
-            <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#0f172a;">Rezervasyon Talebiniz Alındı!</p>
-            <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.7;">Merhaba <strong>${adSoyad}</strong>, rezervasyon talebiniz başarıyla alındı. En geç 24 saat içinde size dönüş yapacağız.</p>
+            <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#0f172a;">Rezervasyon Ön Talebiniz Oluşturuldu</p>
+            <p style="margin:0 0 12px;font-size:14px;color:#475569;line-height:1.7;">Merhaba <strong>${adSoyad}</strong>, rezervasyon ön talebiniz oluşturuldu ve ödemeniz bekleniyor.</p>
+            <p style="margin:0 0 24px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:13px;font-weight:600;color:#9a3412;line-height:1.6;">Bu kayıt kesin rezervasyon değildir. Rezervasyonunuz yalnızca ödeme başarıyla tamamlandığında onaylanacaktır.</p>
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:8px;padding:16px;margin-bottom:24px;">
               <tr>
                 <td style="padding:6px 16px;"><p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">Rezervasyon Kodu</p><p style="margin:4px 0 0;font-weight:700;font-family:monospace;color:#0f172a;font-size:15px;">${code}</p></td>
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
 </body>
 </html>`
 
-  const adminHtml = `<p>Yeni rezervasyon talebi geldi.</p>
+  const adminHtml = `<p>Ödeme bekleyen yeni rezervasyon ön talebi geldi.</p>
 <ul>
   <li><strong>Kod:</strong> ${code}</li>
   <li><strong>Ad Soyad:</strong> ${adSoyad}</li>
@@ -70,13 +71,13 @@ export async function POST(request: Request) {
       resend.emails.send({
         from: FROM,
         to: eposta,
-        subject: `Rezervasyon Talebiniz Alındı — ${code}`,
+        subject: `Rezervasyon Ön Talebiniz Oluşturuldu — Ödeme Bekleniyor — ${code}`,
         html: customerHtml,
       }),
       resend.emails.send({
         from: FROM,
         to: ADMIN_EMAILS,
-        subject: `Yeni Rezervasyon: ${code} — ${adSoyad}`,
+        subject: `Ödeme Bekleyen Ön Talep: ${code} — ${adSoyad}`,
         html: adminHtml,
       }),
     ])
