@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = process.env.RESEND_FROM ?? 'NonnoBlue <ahoy@nonnoblue.com>'
 const ADMIN_EMAILS = ['fdurmaz@gmail.com', 'timo.tumer@nonnoblue.com']
 
@@ -9,6 +8,7 @@ export async function POST(request: Request) {
   if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ ok: true, note: 'RESEND_API_KEY not set, skipping email' })
   }
+  const resend = new Resend(process.env.RESEND_API_KEY)
 
   const body = await request.json()
   const { code, adSoyad, eposta, tekneAdi, baslangicTarihi, bitisTarihi, charterTipi, kisiSayisi } = body
