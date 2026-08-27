@@ -73,7 +73,9 @@ export default function AdminRezervasyonlarPage() {
       })
       const json = await res.json()
       if (!res.ok) {
-        setRefundMsg(`İade başarısız: ${json.detail ?? json.error}`)
+        const msg = `İade başarısız: ${json.detail ?? json.error}`
+        setRefundMsg(msg)
+        alert(msg)
         return
       }
       setBookings(prev => prev.map(b => b.id === booking.id ? { ...b, status: 'refunded' } : b))
@@ -189,10 +191,16 @@ export default function AdminRezervasyonlarPage() {
                           Onayla
                         </button>
                       )}
-                      {r.status !== 'cancelled' && r.status !== 'completed' && (
-                        <button onClick={() => updateStatus(r.id, 'cancelled')} className="btn btn-ghost btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626' }}>
-                          İptal
+                      {['confirmed', 'balance_paid'].includes(r.status) && r.iyzico_payment_id ? (
+                        <button onClick={() => handleRefund(r)} disabled={refunding} className="btn btn-ghost btn-sm" style={{ color: '#6b21a8', borderColor: '#6b21a8', cursor: refunding ? 'wait' : 'pointer' }}>
+                          {refunding ? 'İade ediliyor…' : 'İade Et'}
                         </button>
+                      ) : (
+                        !['cancelled', 'completed', 'refunded'].includes(r.status) && (
+                          <button onClick={() => updateStatus(r.id, 'cancelled')} className="btn btn-ghost btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626' }}>
+                            İptal
+                          </button>
+                        )
                       )}
                       {r.status === 'confirmed' && (
                         <button onClick={() => updateStatus(r.id, 'completed')} className="btn btn-ghost btn-sm">
