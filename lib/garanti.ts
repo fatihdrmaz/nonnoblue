@@ -41,6 +41,12 @@ export function garantiGatewayUrl(mode: 'PROD' | 'TEST'): string {
     : 'https://sanalposprovtest.garantibbva.com.tr/servlet/gt3dengine';
 }
 
+export function garantiXmlUrl(mode: 'PROD' | 'TEST'): string {
+  return mode === 'PROD'
+    ? 'https://sanalposprov.garanti.com.tr/VPServlet'
+    : 'https://sanalposprovtest.garantibbva.com.tr/VPServlet';
+}
+
 function sha1Upper(s: string): string {
   return crypto.createHash('sha1').update(s, 'utf8').digest('hex').toUpperCase();
 }
@@ -93,4 +99,76 @@ export function verifyCallbackHash(cfg: GarantiConfig, params: Record<string, st
 // Başarı sayılan mdstatus değerleri: 1 tam doğrulama; 2,3,4 half-secure
 export function mdStatusOk(md: string | undefined): boolean {
   return md === '1' || md === '2' || md === '3' || md === '4';
+}
+
+// ─── XML API (VPServlet) — iptal (void) / iade (refund) ─────────────────────
+// İptal/iade işlemleri PROVRFN kullanıcısıyla yapılır (GARANTI_REFUND_PASSWORD).
+// XML hash formülü (banka SHA512 yönergesi):
+//   HashData = OrderID + TerminalID + CardNumber("") + Amount + CurrencyCode + SecurityData
+//   SecurityData = SHA1(PROVRFN şifresi + 9 haneli terminal no)
+
+function xmlEscape(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+export interface GarantiXmlResult {
+  ok: boolean;
+  code: string;
+  message: string;
+  raw: string;
+}
+
+export async function sendVoidOrRefund(
+  cfg: GarantiConfig,
+  refundPassword: string,
+  txnType: 'void' | 'refund',
+  orderId: string,
+  amountMinor: string,      // kuruş/cent
+  currencyCode: string,     // 949 | 978
+  retrefNum: string | null, // void için orijinal işlem referansı
+  ip: string,
+): Promise<GarantiXmlResult> {
+  const securityData = sha1Upper(refundPassword + cfg.terminalId.padStart(9, '0'));
+  const hashData = sha512Upper(orderId + cfg.terminalId + '' + amountMinor + currencyCode + securityData);
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<GVPSRequest>
+  <Mode>${cfg.mode}</Mode>
+  <Version>512</Version>
+  <Terminal>
+    <ProvUserID>PROVRFN</ProvUserID>
+    <HashData>${hashData}</HashData>
+    <UserID>PROVRFN</UserID>
+    <ID>${xmlEscape(cfg.terminalId)}</ID>
+    <MerchantID>${xmlEscape(cfg.merchantId)}</MerchantID>
+  </Terminal>
+  <Customer>
+    <IPAddress>${xmlEscape(ip)}</IPAddress>
+    <EmailAddress></EmailAddress>
+  </Customer>
+  <Order>
+    <OrderID>${xmlEscape(orderId)}</OrderID>
+  </Order>
+  <Transaction>
+    <Type>${txnType}</Type>
+    <InstallmentCnt></InstallmentCnt>
+    <Amount>${xmlEscape(amountMinor)}</Amount>
+    <CurrencyCode>${xmlEscape(currencyCode)}</CurrencyCode>
+    <CardholderPresentCode>0</CardholderPresentCode>
+    <MotoInd>N</MotoInd>${retrefNum ? `
+    <OriginalRetrefNum>${xmlEscape(retrefNum)}</OriginalRetrefNum>` : ''}
+  </Transaction>
+</GVPSRequest>`;
+
+  const res = await fetch(garantiXmlUrl(cfg.mode), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'data=' + encodeURIComponent(xml),
+  });
+  const raw = await res.text();
+
+  const pick = (tag: string) => raw.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1] ?? '';
+  const code = pick('Code');
+  const message = pick('ErrorMsg') || pick('SysErrMsg') || pick('Message');
+  return { ok: code === '00', code, message, raw };
 }

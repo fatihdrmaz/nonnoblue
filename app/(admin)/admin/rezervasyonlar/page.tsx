@@ -26,10 +26,12 @@ type Booking = {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  pending:   { label: 'Bekliyor', color: '#92400e', bg: 'rgba(245,158,11,.12)' },
-  confirmed: { label: 'Onaylı',  color: '#065f46', bg: 'rgba(16,185,129,.12)' },
-  completed: { label: 'Tamamlandı', color: 'var(--muted)', bg: 'var(--foam)' },
-  cancelled: { label: 'İptal',   color: '#991b1b', bg: 'rgba(239,68,68,.12)' },
+  pending:      { label: 'Bekliyor', color: '#92400e', bg: 'rgba(245,158,11,.12)' },
+  awaiting_3ds: { label: 'Ödeme bekleniyor', color: '#92400e', bg: 'rgba(245,158,11,.12)' },
+  confirmed:    { label: 'Onaylı',  color: '#065f46', bg: 'rgba(16,185,129,.12)' },
+  completed:    { label: 'Tamamlandı', color: 'var(--muted)', bg: 'var(--foam)' },
+  cancelled:    { label: 'İptal',   color: '#991b1b', bg: 'rgba(239,68,68,.12)' },
+  refunded:     { label: 'İade edildi', color: '#6b21a8', bg: 'rgba(147,51,234,.12)' },
 }
 
 const FILTERS = [
@@ -55,6 +57,34 @@ export default function AdminRezervasyonlarPage() {
       })
       .catch(() => setLoading(false))
   }, [])
+
+  const [refunding, setRefunding] = useState(false)
+  const [refundMsg, setRefundMsg] = useState('')
+
+  async function handleRefund(booking: Booking) {
+    if (!confirm(`${booking.code} — tahsil edilen ön ödeme bankaya iade edilecek. Emin misiniz?`)) return
+    setRefunding(true)
+    setRefundMsg('')
+    try {
+      const res = await fetch('/api/admin/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: booking.id }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setRefundMsg(`İade başarısız: ${json.detail ?? json.error}`)
+        return
+      }
+      setBookings(prev => prev.map(b => b.id === booking.id ? { ...b, status: 'refunded' } : b))
+      setDetail(prev => prev && prev.id === booking.id ? { ...prev, status: 'refunded' } : prev)
+      setRefundMsg(json.method === 'void' ? 'İşlem aynı gün iptali ile geri alındı (komisyonsuz).' : 'İade bankaya gönderildi.')
+    } catch {
+      setRefundMsg('İade isteği gönderilemedi.')
+    } finally {
+      setRefunding(false)
+    }
+  }
 
   async function updateStatus(id: string, newStatus: string) {
     const res = await fetch('/api/admin/bookings', {
@@ -131,7 +161,7 @@ export default function AdminRezervasyonlarPage() {
               const cfg = STATUS_MAP[r.status] ?? STATUS_MAP.pending
               const paid = r.total_amount - r.balance_amount
               return (
-                <tr key={r.id} onClick={() => setDetail(r)} style={{ borderTop: '1px solid var(--line)', cursor: 'pointer' }}>
+                <tr key={r.id} onClick={() => { setDetail(r); setRefundMsg('') }} style={{ borderTop: '1px solid var(--line)', cursor: 'pointer' }}>
                   <td style={{ padding: '14px 16px', fontWeight: 600, color: 'var(--teal)' }}>{r.code}</td>
                   <td style={{ padding: '14px 16px' }}>
                     <div style={{ fontWeight: 500 }}>{guest}</div>
@@ -224,11 +254,21 @@ export default function AdminRezervasyonlarPage() {
                     <span style={{ fontWeight: 500, color: 'var(--ink)', textAlign: 'right', wordBreak: 'break-word' }}>{val}</span>
                   </div>
                 ))}
+                {refundMsg && (
+                  <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 8, fontSize: 13, background: refundMsg.startsWith('İade başarısız') || refundMsg.includes('gönderilemedi') ? '#fee2e2' : 'var(--foam)', color: refundMsg.startsWith('İade başarısız') || refundMsg.includes('gönderilemedi') ? '#991b1b' : 'var(--deep)' }}>
+                    {refundMsg}
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
                   {detail.status === 'pending' && (
                     <button onClick={() => { updateStatus(detail.id, 'confirmed'); setDetail(null) }} className="btn btn-primary btn-sm">Onayla</button>
                   )}
-                  {detail.status !== 'cancelled' && detail.status !== 'completed' && (
+                  {['confirmed', 'balance_paid'].includes(detail.status) && detail.iyzico_payment_id && (
+                    <button onClick={() => handleRefund(detail)} disabled={refunding} className="btn btn-ghost btn-sm" style={{ color: '#6b21a8', borderColor: '#6b21a8', cursor: refunding ? 'wait' : 'pointer' }}>
+                      {refunding ? 'İade ediliyor…' : 'İade Et'}
+                    </button>
+                  )}
+                  {!['cancelled', 'completed', 'refunded'].includes(detail.status) && (
                     <button onClick={() => { updateStatus(detail.id, 'cancelled'); setDetail(null) }} className="btn btn-ghost btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626' }}>İptal Et</button>
                   )}
                 </div>
