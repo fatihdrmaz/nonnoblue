@@ -39,11 +39,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'no_amount' }, { status: 400 });
   }
 
-  // Çoklu kur yetkisi aktif: tahsilat doğrudan EUR (978), kur çevirisi yok.
-  // TCMB kuru yalnızca bilgi amaçlı kaydedilir; alınamazsa ödeme engellenmez.
+  // Tahsilat para birimi GARANTI_CURRENCY ile seçilir:
+  //   TRY (varsayılan) → EUR tutar TCMB satış kuruyla TL'ye çevrilip 949 ile çekilir
+  //   EUR → çoklu kur yetkisi bankada aktive edildikten sonra doğrudan 978 ile çekilir
+  const chargeEur = process.env.GARANTI_CURRENCY === 'EUR';
   const rate = await fetchEurTry();
-  const amountCents = Math.round(booking.deposit_amount * 100); // EUR cent
-  const amountStr = String(amountCents);
+
+  let amountStr: string;
+  let currencyCode: string;
+  if (chargeEur) {
+    amountStr = String(Math.round(booking.deposit_amount * 100)); // EUR cent
+    currencyCode = '978';
+  } else {
+    if (!rate) return NextResponse.json({ error: 'fx_unavailable' }, { status: 502 });
+    amountStr = String(Math.round(booking.deposit_amount * rate * 100)); // kuruş
+    currencyCode = '949';
+  }
 
   // Garanti orderid: alfanumerik — koddaki tireleri kaldır
   const orderId = booking.code.replace(/[^a-zA-Z0-9]/g, '');
@@ -54,7 +65,6 @@ export async function POST(request: Request) {
 
   const txnType = 'sales';
   const installments = '';
-  const currencyCode = '978'; // EUR — çoklu kur yetkisi ile doğrudan EUR tahsilatı
 
   const hash = make3DHash(cfg, orderId, amountStr, currencyCode, successUrl, errorUrl, txnType, installments);
 
@@ -93,7 +103,8 @@ export async function POST(request: Request) {
       motoind: 'N',
       refreshtime: '0',
     },
-    amountEur: amountCents / 100,
+    chargedAmount: Number(amountStr) / 100,
+    chargedCurrency: chargeEur ? 'EUR' : 'TRY',
     rate,
   });
 }

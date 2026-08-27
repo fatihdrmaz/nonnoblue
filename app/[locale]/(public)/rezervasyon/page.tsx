@@ -459,7 +459,13 @@ function RezervasyonForm() {
                 {paymentParam === 'fail' && (
                   <div style={{ padding: '14px 18px', background: '#fee2e2', borderRadius: 8, color: '#991b1b', fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>
                     <strong>{tr ? 'Ödeme tamamlanamadı.' : 'Payment could not be completed.'}</strong>{' '}
-                    {paymentReason && paymentReason !== 'declined' ? paymentReason : (tr ? 'Kartınız doğrulanamadı veya işlem reddedildi.' : 'Your card could not be verified or the transaction was declined.')}
+                    {paymentReason.startsWith('bank:')
+                      ? (tr
+                          ? `Bankanız işlemi onaylamadı (kod ${paymentReason.slice(5)}). Farklı bir kartla deneyebilir veya bankanızla görüşebilirsiniz.`
+                          : `Your bank did not approve the transaction (code ${paymentReason.slice(5)}). Please try a different card or contact your bank.`)
+                      : paymentReason && paymentReason !== 'declined'
+                        ? paymentReason
+                        : (tr ? 'Kartınız doğrulanamadı veya işlem reddedildi.' : 'Your card could not be verified or the transaction was declined.')}
                     <br />
                     {tr
                       ? 'Rezervasyon talebiniz kayıtlıdır — dilerseniz tekrar deneyebilir veya WhatsApp üzerinden bizimle iletişime geçebilirsiniz.'

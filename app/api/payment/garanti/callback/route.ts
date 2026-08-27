@@ -89,5 +89,11 @@ export async function POST(request: Request) {
     status: 'pending', // tekrar denenebilsin
     iyzico_response: safeResponse,
   }).eq('id', booking.id);
+
+  // 3D geçti ama banka provizyonu reddettiyse mderrormessage 3D sonucunu ("Success")
+  // gösterir ve yanıltır — bu durumda banka red kodunu ilet
+  if (mdStatusOk(mdStatus) && procCode && procCode !== '00') {
+    return fail(`bank:${procCode}`);
+  }
   return fail(params['mderrormessage'] ?? params['errmsg'] ?? 'declined');
 }
