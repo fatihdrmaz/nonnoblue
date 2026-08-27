@@ -269,7 +269,14 @@ export default function AdminRezervasyonlarPage() {
                     </button>
                   )}
                   {!['cancelled', 'completed', 'refunded'].includes(detail.status) && (
-                    <button onClick={() => { updateStatus(detail.id, 'cancelled'); setDetail(null) }} className="btn btn-ghost btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626' }}>İptal Et</button>
+                    <button
+                      onClick={() => {
+                        const paid = ['confirmed', 'balance_paid'].includes(detail.status) && detail.iyzico_payment_id
+                        if (paid && !confirm('DİKKAT: Bu rezervasyonun ödemesi alınmış. "İptal Et" parayı İADE ETMEZ, sadece rezervasyon durumunu değiştirir.\n\nParayı iade etmek için "İade Et" butonunu kullanın.\n\nYine de iade YAPMADAN iptal etmek istiyor musunuz?')) return
+                        updateStatus(detail.id, 'cancelled'); setDetail(null)
+                      }}
+                      className="btn btn-ghost btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626' }}
+                    >İptal Et</button>
                   )}
                 </div>
               </div>
