@@ -346,6 +346,13 @@ function RezervasyonForm() {
                           onChange={e => setCard(c => ({ ...c, number: e.target.value.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ') }))}
                           placeholder="0000 0000 0000 0000" style={inputStyle(false)} autoComplete="cc-number"
                         />
+                        {card.number.replace(/\s/g, '').startsWith('9792') && (
+                          <p style={{ fontSize: 12, color: '#b45309', marginTop: 6 }}>
+                            {tr
+                              ? '⚠ Bu bir TROY kartıdır. TROY kartlar EUR ödemelerini desteklemez — lütfen Visa veya Mastercard logolu bir kart kullanın.'
+                              : '⚠ This is a TROY card. TROY cards do not support EUR payments — please use a Visa or Mastercard.'}
+                          </p>
+                        )}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         <div>
