@@ -431,13 +431,18 @@ export default function BoatDetailPage() {
 
   const supplement = BOAT_SUPPLEMENT[boat.slug] ?? null;
   const curPrice = pricing[selectedWeek] ?? pricing[0];
+  // Charter tipi ek ücreti: skippered kaptan içerir, crewed kaptan+hostes içerir.
+  // Dahil olan hizmetin ekstra kutusu ayrıca ücretlendirilmez (çift tahsilat olmasın).
+  const charterSurcharge = charterType === 'skippered' ? 1400 : charterType === 'crewed' ? 2650 : 0;
+  const skipperIncluded = charterType !== 'bareboat';
+  const hostessIncluded = charterType === 'crewed';
   const extrasCost =
-    (extras.skipper ? 1400 : 0) +
-    (extras.hostess ? 1250 : 0) +
+    (!skipperIncluded && extras.skipper ? 1400 : 0) +
+    (!hostessIncluded && extras.hostess ? 1250 : 0) +
     (extras.sup ? 120 : 0) +
     (extras.wifi ? 75 : 0);
   const servicePack = 600;
-  const total = (curPrice?.weekly_price_eur ?? 0) + servicePack + extrasCost;
+  const total = (curPrice?.weekly_price_eur ?? 0) + servicePack + charterSurcharge + extrasCost;
 
   const todayIso = new Date().toISOString().slice(0, 10);
 
@@ -874,18 +879,24 @@ export default function BoatDetailPage() {
                     { key: 'hostess', label: t('hostess'), price: 1250 },
                     { key: 'sup', label: 'SUP', price: 120 },
                     { key: 'wifi', label: 'Wi-Fi', price: 75 },
-                  ] as const).map(({ key, label, price }) => (
-                    <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 13 }}>
+                  ] as const).map(({ key, label, price }) => {
+                    const included = (key === 'skipper' && skipperIncluded) || (key === 'hostess' && hostessIncluded);
+                    return (
+                    <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: included ? 'default' : 'pointer', fontSize: 13, opacity: included ? 0.55 : 1 }}>
                       <input
                         type="checkbox"
-                        checked={extras[key]}
+                        checked={included || extras[key]}
+                        disabled={included}
                         onChange={(e) => setExtras((prev) => ({ ...prev, [key]: e.target.checked }))}
-                        style={{ width: 16, height: 16, accentColor: 'var(--teal)', cursor: 'pointer' }}
+                        style={{ width: 16, height: 16, accentColor: 'var(--teal)', cursor: included ? 'default' : 'pointer' }}
                       />
                       <span style={{ flex: 1 }}>{label}</span>
-                      <span style={{ color: 'var(--teal)', fontWeight: 600 }}>+€{price.toLocaleString()}</span>
+                      <span style={{ color: 'var(--teal)', fontWeight: 600 }}>
+                        {included ? (locale === 'en' ? 'included' : 'dahil') : `+€${price.toLocaleString()}`}
+                      </span>
                     </label>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -894,6 +905,12 @@ export default function BoatDetailPage() {
                 {([
                   [t('weekly_boat'), `€${(curPrice?.weekly_price_eur ?? 0).toLocaleString()}`],
                   [t('service_pack'), `€${servicePack.toLocaleString()}`],
+                  ...(charterSurcharge > 0 ? [[
+                    charterType === 'crewed'
+                      ? (locale === 'en' ? 'Crewed (skipper + hostess)' : 'Crewed (kaptan + hostes)')
+                      : (locale === 'en' ? 'Skippered (skipper)' : 'Skippered (kaptan)'),
+                    `€${charterSurcharge.toLocaleString()}`,
+                  ]] : []),
                   ...(extrasCost > 0 ? [[t('extras'), `€${extrasCost.toLocaleString()}`]] : []),
                 ] as [string, string][]).map(([label, val]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--muted,#6b7f9e)', marginBottom: 8 }}>

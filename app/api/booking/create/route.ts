@@ -66,9 +66,23 @@ export async function POST(request: Request) {
     sup: { name: 'SUP', price: 120 },
     wifi: { name: 'Wi-Fi', price: 75 },
   };
+  // Charter tipi ek ücreti: skipperli kaptan içerir, tam-hizmet kaptan+hostes içerir.
+  // Dahil edilen hizmet ekstra listesinden düşülür (çift tahsilat olmasın).
+  const charterKey = String(charterTipi);
+  const charterSurcharge = charterKey === 'skipperli'
+    ? { name: 'Kaptan (Skippered)', price: 1400 }
+    : charterKey === 'tam-hizmet'
+      ? { name: 'Kaptan + Hostes (Crewed)', price: 2650 }
+      : null;
+
   const extraSet = new Set(extrasInput.filter(e => e in EXTRA_PRICES));
   if (istegeKaptan) extraSet.add('skipper');
-  const chosenExtras = [...extraSet].map(k => EXTRA_PRICES[k]);
+  if (charterKey !== 'bareboat') extraSet.delete('skipper');
+  if (charterKey === 'tam-hizmet') extraSet.delete('hostess');
+  const chosenExtras = [
+    ...(charterSurcharge ? [charterSurcharge] : []),
+    ...[...extraSet].map(k => EXTRA_PRICES[k]),
+  ];
   const extrasTotal = chosenExtras.reduce((s, e) => s + e.price, 0);
 
   const total = weekly !== null ? weekly * weeks + SERVICE_PACK + extrasTotal : 0;
