@@ -23,6 +23,7 @@ type Booking = {
   guest_email: string | null
   guest_phone: string | null
   boats: { name: string } | null
+  booking_extras: { name: string; price_amount: number; qty: number }[] | null
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -235,6 +236,20 @@ export default function AdminRezervasyonlarPage() {
           ['Tarih', `${detail.start_date} → ${detail.end_date}`],
           ['Kişi sayısı', detail.guest_count ?? '—'],
           ['Charter tipi', detail.service_type ? (CHARTER_LABELS[detail.service_type] ?? detail.service_type) : '—'],
+          // Kalem dökümü: tekne kiralama bedeli + booking_extras satırları
+          ...(() => {
+            const extras = detail.booking_extras ?? []
+            if (!extras.length || !detail.total_amount) return [] as [string, React.ReactNode][]
+            const extrasSum = extras.reduce((s, e) => s + e.price_amount * (e.qty || 1), 0)
+            const base = detail.total_amount - extrasSum
+            return [
+              ['Tekne kiralama', `€${base.toLocaleString('tr-TR')}`] as [string, React.ReactNode],
+              ...extras.map(e => [
+                `+ ${e.name}${(e.qty || 1) > 1 ? ` × ${e.qty}` : ''}`,
+                `€${(e.price_amount * (e.qty || 1)).toLocaleString('tr-TR')}`,
+              ] as [string, React.ReactNode]),
+            ]
+          })(),
           ['Toplam', `€${detail.total_amount.toLocaleString('tr-TR')}`],
           ['Ön ödeme (%50)', `€${detail.deposit_amount.toLocaleString('tr-TR')}`],
           ['Ödenen', `€${paid.toLocaleString('tr-TR')}`],
