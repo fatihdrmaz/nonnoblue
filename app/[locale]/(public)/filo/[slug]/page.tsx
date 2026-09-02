@@ -910,6 +910,12 @@ export default function BoatDetailPage() {
                     ≈ {formatTry(total, eurTry)}
                   </div>
                 )}
+                {total > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, color: 'var(--teal,#1d6a96)', marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--line-2,rgba(11,42,80,.07))' }}>
+                    <span>{locale === 'en' ? 'Due now (50% deposit)' : 'Şimdi ödenecek (%50 ön ödeme)'}</span>
+                    <span>€{Math.round(total / 2).toLocaleString()}</span>
+                  </div>
+                )}
               </div>
 
               {/* Guarantee Notes */}
@@ -933,7 +939,9 @@ export default function BoatDetailPage() {
                 </div>
               )}
               <Link
-                href={curPrice && weekStatus(curPrice) === 'available' ? `/rezervasyon?boat=${boat.slug}&start=${curPrice.start_date}&end=${curPrice.end_date}` : '#'}
+                href={curPrice && weekStatus(curPrice) === 'available'
+                  ? `/rezervasyon?boat=${boat.slug}&start=${curPrice.start_date}&end=${curPrice.end_date}&charter=${charterType}&pax=${pax}&extras=${Object.entries(extras).filter(([, v]) => v).map(([k]) => k).join(',')}`
+                  : '#'}
                 className="btn btn-primary btn-lg"
                 onClick={e => { if (!curPrice || weekStatus(curPrice) !== 'available') e.preventDefault(); }}
                 style={{ width: '100%', justifyContent: 'center', marginBottom: 12, opacity: curPrice && weekStatus(curPrice) !== 'available' ? 0.4 : 1, pointerEvents: curPrice && weekStatus(curPrice) !== 'available' ? 'none' : 'auto' }}>

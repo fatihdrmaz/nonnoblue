@@ -67,10 +67,16 @@ function RezervasyonForm() {
   const boatParam = searchParams.get('boat') ?? '';
   const startParam = searchParams.get('start') ?? '';
   const endParam = searchParams.get('end') ?? '';
+  // Tekne detay sayfasından taşınan seçimler
+  const CHARTER_PARAM_MAP: Record<string, string> = { bareboat: 'bareboat', skippered: 'skipperli', crewed: 'tam-hizmet' };
+  const charterParam = CHARTER_PARAM_MAP[searchParams.get('charter') ?? ''] ?? '';
+  const paxParam = searchParams.get('pax') ?? '';
+  const extrasParam = (searchParams.get('extras') ?? '').split(',').filter(Boolean)
+    .filter(e => ['skipper', 'hostess', 'sup', 'wifi'].includes(e));
 
   const [form, setForm] = useState<FormState>({
-    tekne: boatParam, rota: '', charterTipi: '', baslangicTarihi: startParam,
-    bitisTarihi: endParam, kisiSayisi: '', istegeKaptan: false,
+    tekne: boatParam, rota: '', charterTipi: charterParam, baslangicTarihi: startParam,
+    bitisTarihi: endParam, kisiSayisi: paxParam, istegeKaptan: extrasParam.includes('skipper'),
     adSoyad: '', eposta: '', telefon: '', ozelIstekler: '',
   });
   // Banka 3D dönüşü: /rezervasyon?payment=success|fail&code=...&reason=...
@@ -83,7 +89,10 @@ function RezervasyonForm() {
   const [submitError, setSubmitError] = useState('');
   const [bookingCode, setBookingCode] = useState(paymentParam === 'success' ? (searchParams.get('code') ?? '') : '');
   const [bookedBoatName, setBookedBoatName] = useState('');
-  const [quote, setQuote] = useState<{ weekly: number | null; weeks: number; total: number | null }>({ weekly: null, weeks: 1, total: null });
+  const [quote, setQuote] = useState<{
+    weekly: number | null; weeks: number; total: number | null;
+    servicePack?: number; extras?: { name: string; price: number }[];
+  }>({ weekly: null, weeks: 1, total: null });
 
   // Payment step state (UI only — card data is never transmitted; POS activation pending)
   const [card, setCard] = useState({ name: '', number: '', exp: '', cvv: '' });
@@ -101,8 +110,15 @@ function RezervasyonForm() {
     const supabase = createClient();
     supabase.from('boats').select('id,slug,name,type').eq('active', true).order('display_order')
       .then(({ data }) => {
-        if (data && data.length > 0) setBoats(data);
-        else setBoats(BOATS.map(b => ({ id: b.slug, slug: b.slug, name: b.name, type: b.type })));
+        const list = data && data.length > 0
+          ? data
+          : BOATS.map(b => ({ id: b.slug, slug: b.slug, name: b.name, type: b.type }));
+        setBoats(list);
+        // URL'den gelen slug'ı select'in kullandığı id'ye çevir — tekne otomatik seçili gelsin
+        if (boatParam) {
+          const match = list.find(b => b.slug === boatParam || b.id === boatParam);
+          if (match) setForm(prev => (prev.tekne === match.id ? prev : { ...prev, tekne: match.id }));
+        }
       });
     supabase.from('routes').select('id,title').eq('active', true).order('display_order')
       .then(({ data }) => {
@@ -170,6 +186,7 @@ function RezervasyonForm() {
           eposta: form.eposta,
           telefon: form.telefon,
           ozelIstekler: form.ozelIstekler || null,
+          extras: extrasParam,
         }),
       });
       const json = await res.json();
@@ -286,6 +303,18 @@ function RezervasyonForm() {
                         <span>{tr ? 'Haftalık kiralama bedeli' : 'Weekly charter fee'}{quote.weeks > 1 ? ` × ${quote.weeks}` : ''}</span>
                         <span>€{(quote.weekly ?? 0).toLocaleString()}{quote.weeks > 1 ? ` × ${quote.weeks}` : ''}</span>
                       </div>
+                      {quote.servicePack ? (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Service Pack</span>
+                          <span>€{quote.servicePack.toLocaleString()}</span>
+                        </div>
+                      ) : null}
+                      {(quote.extras ?? []).map(e => (
+                        <div key={e.name} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>{e.name}</span>
+                          <span>€{e.price.toLocaleString()}</span>
+                        </div>
+                      ))}
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, borderTop: '1px solid var(--line)', paddingTop: 10 }}>
                         <span>{tr ? 'Toplam' : 'Total'}</span>
                         <span>€{quote.total.toLocaleString()}{eurTry !== null && <span style={{ fontWeight: 500, color: 'var(--muted)', fontSize: 13 }}> ≈ {formatTry(quote.total, eurTry)}</span>}</span>
@@ -481,7 +510,7 @@ function RezervasyonForm() {
                             const label = payCurrency === 'TRY' && eurTry !== null
                               ? `≈ ₺${Math.round(dep * eurTry).toLocaleString('tr-TR')}`
                               : `€${dep.toLocaleString()}`;
-                            return tr ? `${label} Öde` : `Pay ${label}`;
+                            return tr ? `${label} Öde (%50 ön ödeme)` : `Pay ${label} (50% deposit)`;
                           })()
                         : (tr ? 'Ödemeye Devam Et' : 'Continue to Payment')}
                     </button>

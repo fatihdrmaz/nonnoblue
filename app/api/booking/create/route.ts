@@ -14,6 +14,7 @@ export async function POST(request: Request) {
     boatId, routeId, charterTipi, baslangicTarihi, bitisTarihi,
     kisiSayisi, istegeKaptan, adSoyad, eposta, telefon, ozelIstekler,
   } = body as Record<string, string | boolean | undefined>;
+  const extrasInput: string[] = Array.isArray(body.extras) ? body.extras : [];
 
   if (!boatId || !baslangicTarihi || !bitisTarihi || !adSoyad || !eposta || !telefon) {
     return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
@@ -56,7 +57,21 @@ export async function POST(request: Request) {
     (new Date(String(bitisTarihi)).getTime() - new Date(String(baslangicTarihi)).getTime()) / 86400000
   ));
   const weeks = Math.max(1, Math.ceil(days / 7));
-  const total = weekly !== null ? weekly * weeks : 0;
+
+  // Tekne detay sayfasındaki fiyatlarla birebir aynı: Service Pack zorunlu, ekstralar seçime bağlı
+  const SERVICE_PACK = 600;
+  const EXTRA_PRICES: Record<string, { name: string; price: number }> = {
+    skipper: { name: 'Kaptan', price: 1400 },
+    hostess: { name: 'Hostes', price: 1250 },
+    sup: { name: 'SUP', price: 120 },
+    wifi: { name: 'Wi-Fi', price: 75 },
+  };
+  const extraSet = new Set(extrasInput.filter(e => e in EXTRA_PRICES));
+  if (istegeKaptan) extraSet.add('skipper');
+  const chosenExtras = [...extraSet].map(k => EXTRA_PRICES[k]);
+  const extrasTotal = chosenExtras.reduce((s, e) => s + e.price, 0);
+
+  const total = weekly !== null ? weekly * weeks + SERVICE_PACK + extrasTotal : 0;
   const deposit = Math.round(total / 2);
 
   // Logged-in user (optional)
@@ -76,7 +91,7 @@ export async function POST(request: Request) {
     ozelIstekler ? `Notlar: ${ozelIstekler}` : null,
   ].filter(Boolean);
 
-  const { error } = await admin.from('bookings').insert({
+  const { data: inserted, error } = await admin.from('bookings').insert({
     code,
     boat_id: boat.id,
     user_id: user?.id ?? null,
@@ -90,15 +105,28 @@ export async function POST(request: Request) {
     balance_amount: total - deposit,
     status: 'pending',
     notes: noteParts.join(' | '),
-  });
+  }).select('id').single();
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error || !inserted) {
+    return NextResponse.json({ error: error?.message ?? 'insert_failed' }, { status: 500 });
   }
+
+  // Kalem dökümü — admin ve raporlama için
+  const extraRows = [
+    { booking_id: inserted.id, name: 'Service Pack', price_amount: SERVICE_PACK, qty: 1 },
+    ...chosenExtras.map(e => ({ booking_id: inserted.id, name: e.name, price_amount: e.price, qty: 1 })),
+  ];
+  await admin.from('booking_extras').insert(extraRows);
 
   return NextResponse.json({
     code,
     boatName: boat.name,
-    quote: { weekly, weeks, total: weekly !== null ? total : null },
+    quote: {
+      weekly,
+      weeks,
+      servicePack: SERVICE_PACK,
+      extras: chosenExtras,
+      total: weekly !== null ? total : null,
+    },
   });
 }
