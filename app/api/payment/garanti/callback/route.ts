@@ -90,6 +90,11 @@ export async function POST(request: Request) {
     iyzico_response: safeResponse,
   }).eq('id', booking.id);
 
+  // Yurt içi kart ile yabancı para denemesi — müşteriyi TL seçimine yönlendir
+  if ((params['errmsg'] ?? '').includes('YP islem') ||
+      (procCode === '13' && params['txncurrencycode'] === '978')) {
+    return fail('domestic_fx');
+  }
   // 3D geçti ama banka provizyonu reddettiyse mderrormessage 3D sonucunu ("Success")
   // gösterir ve yanıltır — bu durumda banka red kodunu ilet
   if (mdStatusOk(mdStatus) && procCode && procCode !== '00') {

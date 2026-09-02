@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'not_configured' }, { status: 503 });
   }
 
-  const { code, email } = await request.json() as { code?: string; email?: string };
+  const { code, email, currency } = await request.json() as { code?: string; email?: string; currency?: string };
   if (!code) return NextResponse.json({ error: 'code required' }, { status: 400 });
 
   const admin = adminClient();
@@ -39,10 +39,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'no_amount' }, { status: 400 });
   }
 
-  // Tahsilat para birimi GARANTI_CURRENCY ile seçilir:
-  //   TRY (varsayılan) → EUR tutar TCMB satış kuruyla TL'ye çevrilip 949 ile çekilir
-  //   EUR → çoklu kur yetkisi bankada aktive edildikten sonra doğrudan 978 ile çekilir
-  const chargeEur = process.env.GARANTI_CURRENCY === 'EUR';
+  // Tahsilat para birimi: müşteri ödeme ekranında seçer (banka kuralı gereği
+  // yurt içi kartlar yalnızca TRY, yurt dışı kartlar EUR ödeyebilir).
+  // EUR seçimi ancak GARANTI_CURRENCY=EUR (çoklu kur aktif) ise kabul edilir;
+  // aksi halde ve TRY seçiminde TCMB satış kuruyla TL (949) çekilir.
+  const chargeEur = currency === 'EUR' && process.env.GARANTI_CURRENCY === 'EUR';
   const rate = await fetchEurTry();
 
   let amountStr: string;

@@ -91,6 +91,8 @@ function RezervasyonForm() {
   const [payError, setPayError] = useState('');
   const [payNotice, setPayNotice] = useState(false);
   const [paying, setPaying] = useState(false);
+  // Banka kuralı: yurt içi kartlar yalnızca TL, yurt dışı kartlar EUR ödeyebilir
+  const [payCurrency, setPayCurrency] = useState<'TRY' | 'EUR'>(tr ? 'TRY' : 'EUR');
 
   const [boats, setBoats] = useState<{ id: string; slug: string; name: string; type: string }[]>([]);
   const [routes, setRoutes] = useState<{ id: string; title: string }[]>([]);
@@ -329,6 +331,36 @@ function RezervasyonForm() {
                   </div>
                 ) : (
                   <>
+                    {/* Ödeme para birimi */}
+                    <div style={{ marginBottom: 24 }}>
+                      <p style={labelStyle}>{tr ? 'Ödeme Para Birimi' : 'Payment Currency'}</p>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        {([
+                          ['TRY', tr ? '₺ Türk Lirası' : '₺ Turkish Lira', tr ? 'Türkiye kartları için' : 'For cards issued in Türkiye'],
+                          ['EUR', '€ Euro', tr ? 'Yurt dışı kartlar için' : 'For internationally issued cards'],
+                        ] as const).map(([val, label, sub]) => (
+                          <button
+                            key={val}
+                            onClick={() => setPayCurrency(val)}
+                            style={{
+                              flex: 1, padding: '12px 16px', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                              border: `1.5px solid ${payCurrency === val ? 'var(--teal)' : 'var(--line)'}`,
+                              background: payCurrency === val ? 'var(--foam)' : 'transparent',
+                              textAlign: 'left',
+                            }}
+                          >
+                            <div style={{ fontWeight: 700, fontSize: 14, color: payCurrency === val ? 'var(--teal)' : 'var(--ink)' }}>{label}</div>
+                            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>
+                          </button>
+                        ))}
+                      </div>
+                      <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+                        {tr
+                          ? 'Banka kuralı gereği Türkiye’de basılmış kartlar yalnızca TL ile ödeme yapabilir; EUR ödemeler yurt dışı kartlarla yapılır.'
+                          : 'Cards issued in Türkiye can only pay in TRY; EUR payments require an internationally issued card.'}
+                      </p>
+                    </div>
+
                     {/* Card form */}
                     <p style={sectionTitleStyle}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'var(--teal)', color: '#fff', fontSize: 12, fontWeight: 800 }}>€</span>
@@ -413,7 +445,7 @@ function RezervasyonForm() {
                           const res = await fetch('/api/payment/garanti/init', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ code: bookingCode, email: form.eposta }),
+                            body: JSON.stringify({ code: bookingCode, email: form.eposta, currency: payCurrency }),
                           });
                           const json = await res.json();
                           if (res.status === 503) { setPaying(false); setPayNotice(true); return; }
@@ -444,7 +476,13 @@ function RezervasyonForm() {
                       style={{ width: '100%', background: paying ? 'var(--muted)' : 'var(--teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '16px 28px', fontSize: 16, fontWeight: 700, cursor: paying ? 'wait' : 'pointer', letterSpacing: '0.02em' }}
                     >
                       {quote.total !== null
-                        ? (tr ? `€${Math.round(quote.total / 2).toLocaleString()} Öde` : `Pay €${Math.round(quote.total / 2).toLocaleString()}`)
+                        ? (() => {
+                            const dep = Math.round(quote.total / 2);
+                            const label = payCurrency === 'TRY' && eurTry !== null
+                              ? `≈ ₺${Math.round(dep * eurTry).toLocaleString('tr-TR')}`
+                              : `€${dep.toLocaleString()}`;
+                            return tr ? `${label} Öde` : `Pay ${label}`;
+                          })()
                         : (tr ? 'Ödemeye Devam Et' : 'Continue to Payment')}
                     </button>
                     <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)', marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -466,7 +504,11 @@ function RezervasyonForm() {
                 {paymentParam === 'fail' && (
                   <div style={{ padding: '14px 18px', background: '#fee2e2', borderRadius: 8, color: '#991b1b', fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>
                     <strong>{tr ? 'Ödeme tamamlanamadı.' : 'Payment could not be completed.'}</strong>{' '}
-                    {paymentReason.startsWith('bank:')
+                    {paymentReason === 'domestic_fx'
+                      ? (tr
+                          ? 'Türkiye’de basılmış kartlar EUR ödemesi yapamaz (banka kuralı). Lütfen tekrar deneyin ve ödeme para birimi olarak ₺ Türk Lirası’nı seçin.'
+                          : 'Cards issued in Türkiye cannot pay in EUR (bank rule). Please try again and select ₺ TRY as the payment currency.')
+                      : paymentReason.startsWith('bank:')
                       ? (tr
                           ? `Bankanız işlemi onaylamadı (kod ${paymentReason.slice(5)}). Farklı bir kartla deneyebilir veya bankanızla görüşebilirsiniz.`
                           : `Your bank did not approve the transaction (code ${paymentReason.slice(5)}). Please try a different card or contact your bank.`)
