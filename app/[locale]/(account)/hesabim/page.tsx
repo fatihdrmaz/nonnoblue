@@ -34,6 +34,12 @@ type Booking = {
   } | null;
 };
 
+function toPublicUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `https://eieshihgnevszcsaziyn.supabase.co/storage/v1/object/public/boat-photos/${path}`;
+}
+
 const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
   pending:   { color: '#92400e', bg: 'rgba(245,158,11,.12)' },
   confirmed: { color: '#065f46', bg: 'rgba(16,185,129,.12)' },
@@ -226,7 +232,7 @@ export default function HesabimPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                       {activeBookings.map(r => {
                         const photos = (r.boats?.boat_photos ?? []).sort((a, b) => a.position - b.position);
-                        const img = photos[0]?.storage_path ?? '';
+                        const img = toPublicUrl(photos[0]?.storage_path ?? '');
                         return (
                           <div key={r.code} style={{
                             background: 'var(--card)', borderRadius: 'var(--radius-lg)',
@@ -294,7 +300,7 @@ export default function HesabimPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                       {pastBookings.map(r => {
                         const photos = (r.boats?.boat_photos ?? []).sort((a, b) => a.position - b.position);
-                        const img = photos[0]?.storage_path ?? '';
+                        const img = toPublicUrl(photos[0]?.storage_path ?? '');
                         return (
                           <div key={r.code} style={{
                             background: 'var(--card)', borderRadius: 'var(--radius-lg)',
