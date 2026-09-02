@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'not_configured' }, { status: 503 });
   }
 
-  const { code, email, currency } = await request.json() as { code?: string; email?: string; currency?: string };
+  const { code, email, currency, amount } = await request.json() as { code?: string; email?: string; currency?: string; amount?: string };
   if (!code) return NextResponse.json({ error: 'code required' }, { status: 400 });
 
   const admin = adminClient();
@@ -35,9 +35,14 @@ export async function POST(request: Request) {
   if (!['pending', 'awaiting_3ds'].includes(booking.status)) {
     return NextResponse.json({ error: 'already_paid' }, { status: 409 });
   }
-  if (!booking.deposit_amount || booking.deposit_amount <= 0) {
+  if (!booking.total_amount || booking.total_amount <= 0) {
     return NextResponse.json({ error: 'no_amount' }, { status: 400 });
   }
+
+  // Ödeme tutarı: %50 ön ödeme (varsayılan) veya tamamı — booking'in
+  // deposit/balance alanları seçime göre güncellenir
+  const payFull = amount === 'full';
+  const chargeBase = payFull ? booking.total_amount : Math.round(booking.total_amount / 2);
 
   // Tahsilat para birimi: müşteri ödeme ekranında seçer (banka kuralı gereği
   // yurt içi kartlar yalnızca TRY, yurt dışı kartlar EUR ödeyebilir).
@@ -49,11 +54,11 @@ export async function POST(request: Request) {
   let amountStr: string;
   let currencyCode: string;
   if (chargeEur) {
-    amountStr = String(Math.round(booking.deposit_amount * 100)); // EUR cent
+    amountStr = String(Math.round(chargeBase * 100)); // EUR cent
     currencyCode = '978';
   } else {
     if (!rate) return NextResponse.json({ error: 'fx_unavailable' }, { status: 502 });
-    amountStr = String(Math.round(booking.deposit_amount * rate * 100)); // kuruş
+    amountStr = String(Math.round(chargeBase * rate * 100)); // kuruş
     currencyCode = '949';
   }
 
@@ -71,13 +76,15 @@ export async function POST(request: Request) {
 
   const ip = (request.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || '127.0.0.1';
 
-  // Sözleşme onayı + 3DS bekleme durumu
+  // Sözleşme onayı + 3DS bekleme durumu + seçilen ödeme planı
   await admin.from('bookings').update({
     status: 'awaiting_3ds',
     fx_rate: rate,
     iyzico_conversation_id: orderId,
     contract_accepted_at: new Date().toISOString(),
     ip_address: ip,
+    deposit_amount: chargeBase,
+    balance_amount: booking.total_amount - chargeBase,
   }).eq('id', booking.id);
 
   return NextResponse.json({

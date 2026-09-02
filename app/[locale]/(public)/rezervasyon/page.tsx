@@ -102,6 +102,8 @@ function RezervasyonForm() {
   const [paying, setPaying] = useState(false);
   // Banka kuralı: yurt içi kartlar yalnızca TL, yurt dışı kartlar EUR ödeyebilir
   const [payCurrency, setPayCurrency] = useState<'TRY' | 'EUR'>(tr ? 'TRY' : 'EUR');
+  // %50 ön ödeme (varsayılan) veya tutarın tamamı
+  const [payAmount, setPayAmount] = useState<'deposit' | 'full'>('deposit');
 
   const [boats, setBoats] = useState<{ id: string; slug: string; name: string; type: string }[]>([]);
   const [routes, setRoutes] = useState<{ id: string; title: string }[]>([]);
@@ -320,13 +322,17 @@ function RezervasyonForm() {
                         <span>€{quote.total.toLocaleString()}{eurTry !== null && <span style={{ fontWeight: 500, color: 'var(--muted)', fontSize: 13 }}> ≈ {formatTry(quote.total, eurTry)}</span>}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--teal)', fontWeight: 700 }}>
-                        <span>{tr ? 'Şimdi ödenecek ön ödeme (%50)' : 'Deposit due now (50%)'}</span>
-                        <span>€{Math.round(quote.total / 2).toLocaleString()}{eurTry !== null && <span style={{ fontWeight: 500, fontSize: 13 }}> ≈ {formatTry(Math.round(quote.total / 2), eurTry)}</span>}</span>
+                        <span>{payAmount === 'full'
+                          ? (tr ? 'Şimdi ödenecek (tamamı)' : 'Due now (full amount)')
+                          : (tr ? 'Şimdi ödenecek ön ödeme (%50)' : 'Deposit due now (50%)')}</span>
+                        <span>€{(payAmount === 'full' ? quote.total : Math.round(quote.total / 2)).toLocaleString()}{eurTry !== null && <span style={{ fontWeight: 500, fontSize: 13 }}> ≈ {formatTry(payAmount === 'full' ? quote.total : Math.round(quote.total / 2), eurTry)}</span>}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)', fontSize: 13 }}>
-                        <span>{tr ? 'Kalan bakiye (teslimden 30 gün önce)' : 'Balance (30 days before check-in)'}</span>
-                        <span>€{(quote.total - Math.round(quote.total / 2)).toLocaleString()}</span>
-                      </div>
+                      {payAmount === 'deposit' && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)', fontSize: 13 }}>
+                          <span>{tr ? 'Kalan bakiye (teslimden 30 gün önce)' : 'Balance (30 days before check-in)'}</span>
+                          <span>€{(quote.total - Math.round(quote.total / 2)).toLocaleString()}</span>
+                        </div>
+                      )}
                       {eurTry !== null && (
                         <p style={{ fontSize: 11, color: 'var(--muted)', margin: 0 }}>
                           {tr
@@ -360,6 +366,33 @@ function RezervasyonForm() {
                   </div>
                 ) : (
                   <>
+                    {/* Ödeme tutarı seçimi */}
+                    {quote.total !== null && (
+                      <div style={{ marginBottom: 24 }}>
+                        <p style={labelStyle}>{tr ? 'Ödeme Tutarı' : 'Payment Amount'}</p>
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          {([
+                            ['deposit', tr ? '%50 Ön Ödeme' : '50% Deposit', `€${Math.round(quote.total / 2).toLocaleString()}`, tr ? 'Kalan, teslimden 30 gün önce' : 'Balance due 30 days before check-in'],
+                            ['full', tr ? 'Tamamını Öde' : 'Pay in Full', `€${quote.total.toLocaleString()}`, tr ? 'Tek seferde, kalan bakiye yok' : 'One payment, no balance due'],
+                          ] as const).map(([val, label, amount, sub]) => (
+                            <button
+                              key={val}
+                              onClick={() => setPayAmount(val)}
+                              style={{
+                                flex: 1, padding: '12px 16px', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                                border: `1.5px solid ${payAmount === val ? 'var(--teal)' : 'var(--line)'}`,
+                                background: payAmount === val ? 'var(--foam)' : 'transparent',
+                                textAlign: 'left',
+                              }}
+                            >
+                              <div style={{ fontWeight: 700, fontSize: 14, color: payAmount === val ? 'var(--teal)' : 'var(--ink)' }}>{label} · {amount}</div>
+                              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Ödeme para birimi */}
                     <div style={{ marginBottom: 24 }}>
                       <p style={labelStyle}>{tr ? 'Ödeme Para Birimi' : 'Payment Currency'}</p>
@@ -474,7 +507,7 @@ function RezervasyonForm() {
                           const res = await fetch('/api/payment/garanti/init', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ code: bookingCode, email: form.eposta, currency: payCurrency }),
+                            body: JSON.stringify({ code: bookingCode, email: form.eposta, currency: payCurrency, amount: payAmount }),
                           });
                           const json = await res.json();
                           if (res.status === 503) { setPaying(false); setPayNotice(true); return; }
@@ -506,11 +539,14 @@ function RezervasyonForm() {
                     >
                       {quote.total !== null
                         ? (() => {
-                            const dep = Math.round(quote.total / 2);
+                            const dep = payAmount === 'full' ? quote.total : Math.round(quote.total / 2);
                             const label = payCurrency === 'TRY' && eurTry !== null
                               ? `≈ ₺${Math.round(dep * eurTry).toLocaleString('tr-TR')}`
                               : `€${dep.toLocaleString()}`;
-                            return tr ? `${label} Öde (%50 ön ödeme)` : `Pay ${label} (50% deposit)`;
+                            const suffix = payAmount === 'full'
+                              ? (tr ? '(tamamı)' : '(full amount)')
+                              : (tr ? '(%50 ön ödeme)' : '(50% deposit)');
+                            return tr ? `${label} Öde ${suffix}` : `Pay ${label} ${suffix}`;
                           })()
                         : (tr ? 'Ödemeye Devam Et' : 'Continue to Payment')}
                     </button>
